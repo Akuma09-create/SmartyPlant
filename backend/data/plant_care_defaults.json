@@ -1,0 +1,183 @@
+{
+  "care_defaults": {
+    "general": {
+      "watering_days": 7,
+      "fertilizing_days": 30,
+      "pruning_months": [3, 6, 9],
+      "repot_months": 24,
+      "description": "Standard care for most houseplants"
+    },
+    "succulent": {
+      "watering_days": 14,
+      "fertilizing_days": 60,
+      "pruning_months": [4, 9],
+      "repot_months": 24,
+      "description": "Low water, infrequent fertilizing"
+    },
+    "cactus": {
+      "watering_days": 21,
+      "fertilizing_days": 90,
+      "pruning_months": [],
+      "repot_months": 36,
+      "description": "Minimal water required"
+    },
+    "tropical": {
+      "watering_days": 5,
+      "fertilizing_days": 14,
+      "pruning_months": [3, 6, 9, 12],
+      "repot_months": 12,
+      "description": "High humidity and frequent watering"
+    },
+    "flowering": {
+      "watering_days": 3,
+      "fertilizing_days": 14,
+      "pruning_months": [2, 5, 8, 11],
+      "repot_months": 12,
+      "description": "Regular water and fertilizer for blooms"
+    },
+    "herb": {
+      "watering_days": 2,
+      "fertilizing_days": 14,
+      "pruning_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "repot_months": 6,
+      "description": "Frequent watering and harvesting"
+    },
+    "vegetable": {
+      "watering_days": 2,
+      "fertilizing_days": 7,
+      "pruning_months": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "repot_months": 3,
+      "description": "Daily attention for best yields"
+    },
+    "fern": {
+      "watering_days": 3,
+      "fertilizing_days": 30,
+      "pruning_months": [3, 9],
+      "repot_months": 18,
+      "description": "Keep soil moist, indirect light"
+    },
+    "palm": {
+      "watering_days": 7,
+      "fertilizing_days": 30,
+      "pruning_months": [3, 9],
+      "repot_months": 24,
+      "description": "Moderate water, occasional pruning"
+    },
+    "orchid": {
+      "watering_days": 7,
+      "fertilizing_days": 14,
+      "pruning_months": [1, 7],
+      "repot_months": 24,
+      "description": "Weekly watering, biweekly feeding"
+    }
+  },
+  "species_mapping": {
+    "aloe vera": "succulent",
+    "aloe": "succulent",
+    "snake plant": "succulent",
+    "sansevieria": "succulent",
+    "jade plant": "succulent",
+    "echeveria": "succulent",
+    "haworthia": "succulent",
+    "sedum": "succulent",
+    
+    "christmas cactus": "cactus",
+    "prickly pear": "cactus",
+    "barrel cactus": "cactus",
+    "opuntia": "cactus",
+    
+    "pothos": "tropical",
+    "monstera": "tropical",
+    "philodendron": "tropical",
+    "calathea": "tropical",
+    "peace lily": "tropical",
+    "spathiphyllum": "tropical",
+    "anthurium": "tropical",
+    "bird of paradise": "tropical",
+    "rubber plant": "tropical",
+    "ficus": "tropical",
+    "dieffenbachia": "tropical",
+    "croton": "tropical",
+    "alocasia": "tropical",
+    
+    "rose": "flowering",
+    "hibiscus": "flowering",
+    "begonia": "flowering",
+    "geranium": "flowering",
+    "petunia": "flowering",
+    "marigold": "flowering",
+    "zinnia": "flowering",
+    "dahlia": "flowering",
+    "chrysanthemum": "flowering",
+    "tulip": "flowering",
+    "lily": "flowering",
+    "sunflower": "flowering",
+    "lavender": "flowering",
+    "jasmine": "flowering",
+    "gardenia": "flowering",
+    
+    "basil": "herb",
+    "mint": "herb",
+    "rosemary": "herb",
+    "thyme": "herb",
+    "oregano": "herb",
+    "parsley": "herb",
+    "cilantro": "herb",
+    "sage": "herb",
+    "chives": "herb",
+    "dill": "herb",
+    
+    "tomato": "vegetable",
+    "pepper": "vegetable",
+    "cucumber": "vegetable",
+    "lettuce": "vegetable",
+    "spinach": "vegetable",
+    "carrot": "vegetable",
+    "onion": "vegetable",
+    "garlic": "vegetable",
+    "bean": "vegetable",
+    "pea": "vegetable",
+    "squash": "vegetable",
+    "zucchini": "vegetable",
+    
+    "boston fern": "fern",
+    "maidenhair fern": "fern",
+    "bird's nest fern": "fern",
+    "asparagus fern": "fern",
+    
+    "areca palm": "palm",
+    "majesty palm": "palm",
+    "parlor palm": "palm",
+    "kentia palm": "palm",
+    "bamboo palm": "palm",
+    "ponytail palm": "palm",
+    
+    "phalaenopsis": "orchid",
+    "dendrobium": "orchid",
+    "cattleya": "orchid",
+    "vanda": "orchid",
+    "oncidium": "orchid"
+  },
+  "reminder_types": {
+    "water": {
+      "icon": "💧",
+      "title_template": "Water {plant_name}",
+      "description": "Time to water your plant"
+    },
+    "fertilize": {
+      "icon": "🌿",
+      "title_template": "Fertilize {plant_name}",
+      "description": "Apply fertilizer to promote healthy growth"
+    },
+    "prune": {
+      "icon": "✂️",
+      "title_template": "Prune {plant_name}",
+      "description": "Remove dead or overgrown parts"
+    },
+    "repot": {
+      "icon": "🪴",
+      "title_template": "Repot {plant_name}",
+      "description": "Transfer to a larger pot with fresh soil"
+    }
+  }
+}

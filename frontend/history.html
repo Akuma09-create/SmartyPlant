@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis History - Smart Plant Health Assistant</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .history-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            overflow: hidden;
+        }
+        .history-card:hover {
+            transform: translateY(-3px);
+        }
+        .history-image {
+            height: 120px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .history-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .health-badge {
+            font-size: 0.9rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
+        .health-good { background-color: #28a745; color: white; }
+        .health-moderate { background-color: #ffc107; color: #212529; }
+        .health-poor { background-color: #dc3545; color: white; }
+        .detail-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .disease-tag {
+            background: #ffebee;
+            color: #c62828;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            display: inline-block;
+            margin: 3px;
+        }
+        .treatment-item {
+            padding: 10px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .filter-bar {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-leaf me-2"></i>
+                <span data-i18n="app_name">Smart Plant Health Assistant</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/" data-i18n="nav_analyze">Analyze Plant</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/plants" data-i18n="nav_my_plants">My Plants</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/history" data-i18n="nav_history">History</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <div class="dropdown me-3">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown">
+                            <i class="fas fa-globe me-1"></i> <span id="currentLang">English</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('en')">English</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('hi')">हिंदी</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('mr')">मराठी</a></li>
+                        </ul>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> <span id="userName">User</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <h2 data-i18n="analysis_history">Analysis History</h2>
+                <p class="text-muted" data-i18n="history_subtitle">View your past plant health analyses and reports</p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="row">
+            <!-- History List -->
+            <div class="col-lg-5" id="historyListCol">
+                <!-- Filters -->
+                <div class="filter-bar mb-3">
+                    <div class="row g-2">
+                        <div class="col-8">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search..." data-i18n-placeholder="search">
+                        </div>
+                        <div class="col-4">
+                            <select class="form-select" id="healthFilter">
+                                <option value="" data-i18n="all_health">All</option>
+                                <option value="good" data-i18n="healthy">Healthy</option>
+                                <option value="moderate" data-i18n="moderate">Moderate</option>
+                                <option value="poor" data-i18n="unhealthy">Unhealthy</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Items -->
+                <div id="historyList">
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                        <p data-i18n="loading">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detail View -->
+            <div class="col-lg-7" id="detailCol">
+                <div class="card border-0 shadow-sm" id="detailView" style="display: none;">
+                    <div class="card-body">
+                        <!-- Detail content loaded dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div id="emptyDetail" class="text-center text-muted py-5">
+                    <i class="fas fa-leaf fa-4x mb-4 text-success opacity-50"></i>
+                    <h5 data-i18n="select_analysis">Select an analysis to view details</h5>
+                    <p class="small" data-i18n="select_analysis_desc">Click on any analysis from the list to see full details</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="js/translations.js"></script>
+    <script>
+        const API_BASE = '/api/v1';
+        let currentLanguage = localStorage.getItem('language') || 'en';
+        let authToken = localStorage.getItem('authToken');
+        let historyData = [];
+        let selectedAnalysisId = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!authToken) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            initializePage();
+        });
+
+        async function initializePage() {
+            changeLanguage(currentLanguage, false);
+            await loadUserData();
+            await loadHistory();
+            setupEventListeners();
+            
+            // Check for id in URL
+            const params = new URLSearchParams(window.location.search);
+            const analysisId = params.get('id');
+            if (analysisId) {
+                showAnalysisDetail(parseInt(analysisId));
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('searchInput').addEventListener('input', filterHistory);
+            document.getElementById('healthFilter').addEventListener('change', filterHistory);
+        }
+
+        async function loadUserData() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('userName').textContent = data.user.name || 'User';
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+            }
+        }
+
+        async function loadHistory() {
+            try {
+                const response = await fetch(`${API_BASE}/history`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    historyData = data.history || [];
+                    renderHistory(historyData);
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                renderHistory([]);
+            }
+        }
+
+        function renderHistory(items) {
+            const container = document.getElementById('historyList');
+            
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-leaf fa-3x mb-3 text-success opacity-50"></i>
+                        <h5 data-i18n="no_history">${t('no_history', currentLanguage)}</h5>
+                        <p class="small" data-i18n="no_history_desc">${t('no_history_desc', currentLanguage)}</p>
+                        <a href="home.html" class="btn btn-success" data-i18n="analyze_first">${t('analyze_first', currentLanguage)}</a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = items.map(item => `
+                <div class="card history-card mb-3 ${selectedAnalysisId === item.id ? 'border-success border-2' : 'border-0'}" 
+                     onclick="showAnalysisDetail(${item.id})" style="cursor: pointer;">
+                    <div class="row g-0">
+                        <div class="col-4">
+                            <div class="history-image h-100">
+                                ${item.image_url 
+                                    ? `<img src="${item.image_url}" alt="Plant">`
+                                    : '<i class="fas fa-seedling fa-2x text-success"></i>'
+                                }
+                            </div>
+                        </div>
+                        <div class="col-8">
+                            <div class="card-body py-2">
+                                <h6 class="card-title mb-1">${item.plant_name || t('unknown_plant', currentLanguage)}</h6>
+                                <span class="health-badge ${getHealthClass(item.health_score)}">
+                                    ${item.health_score ? item.health_score + '%' : '-'}
+                                </span>
+                                <p class="card-text small text-muted mb-0 mt-2">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    ${formatDate(item.created_at)}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterHistory() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const healthFilter = document.getElementById('healthFilter').value;
+            
+            let filtered = historyData;
+            
+            if (searchTerm) {
+                filtered = filtered.filter(item => 
+                    (item.plant_name || '').toLowerCase().includes(searchTerm) ||
+                    (item.diagnosis || '').toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (healthFilter) {
+                filtered = filtered.filter(item => {
+                    const score = item.health_score || 0;
+                    if (healthFilter === 'good') return score >= 70;
+                    if (healthFilter === 'moderate') return score >= 40 && score < 70;
+                    if (healthFilter === 'poor') return score < 40;
+                    return true;
+                });
+            }
+            
+            renderHistory(filtered);
+        }
+
+        async function showAnalysisDetail(analysisId) {
+            selectedAnalysisId = analysisId;
+            renderHistory(historyData.filter(item => {
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+                const healthFilter = document.getElementById('healthFilter').value;
+                
+                let match = true;
+                if (searchTerm) {
+                    match = (item.plant_name || '').toLowerCase().includes(searchTerm) ||
+                            (item.diagnosis || '').toLowerCase().includes(searchTerm);
+                }
+                if (healthFilter && match) {
+                    const score = item.health_score || 0;
+                    if (healthFilter === 'good') match = score >= 70;
+                    else if (healthFilter === 'moderate') match = score >= 40 && score < 70;
+                    else if (healthFilter === 'poor') match = score < 40;
+                }
+                return match;
+            }));
+            
+            const analysis = historyData.find(item => item.id === analysisId);
+            if (!analysis) return;
+
+            document.getElementById('emptyDetail').style.display = 'none';
+            const detailView = document.getElementById('detailView');
+            detailView.style.display = 'block';
+            
+            // Parse analysis result if it's JSON string
+            let result = analysis.analysis_result;
+            if (typeof result === 'string') {
+                try {
+                    result = JSON.parse(result);
+                } catch (e) {
+                    result = { summary: result };
+                }
+            }
+
+            detailView.querySelector('.card-body').innerHTML = `
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h4 class="mb-1">${analysis.plant_name || t('unknown_plant', currentLanguage)}</h4>
+                        <p class="text-muted mb-0">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            ${formatDate(analysis.created_at)} at ${formatTime(analysis.created_at)}
+                        </p>
+                    </div>
+                    <span class="health-badge ${getHealthClass(analysis.health_score)} fs-5">
+                        ${analysis.health_score ? analysis.health_score + '%' : '-'}
+                    </span>
+                </div>
+
+                ${analysis.image_url ? `
+                    <div class="text-center mb-4">
+                        <img src="${analysis.image_url}" alt="Plant" class="img-fluid rounded" style="max-height: 250px;">
+                    </div>
+                ` : ''}
+
+                ${result.summary ? `
+                    <div class="detail-section">
+                        <h6 class="text-success mb-3"><i class="fas fa-info-circle me-2"></i>${t('summary', currentLanguage)}</h6>
+                        <p class="mb-0">${result.summary}</p>
+                    </div>
+                ` : ''}
+
+                ${result.diseases && result.diseases.length > 0 ? `
+                    <div class="detail-section">
+                        <h6 class="text-danger mb-3"><i class="fas fa-virus me-2"></i>${t('detected_issues', currentLanguage)}</h6>
+                        <div>
+                            ${result.diseases.map(d => `<span class="disease-tag">${d}</span>`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                ${result.recommendations && result.recommendations.length > 0 ? `
+                    <div class="detail-section">
+                        <h6 class="text-primary mb-3"><i class="fas fa-lightbulb me-2"></i>${t('recommendations', currentLanguage)}</h6>
+                        <ul class="mb-0">
+                            ${result.recommendations.map(r => `<li>${r}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+
+                ${result.care_tips ? `
+                    <div class="detail-section">
+                        <h6 class="text-info mb-3"><i class="fas fa-hand-holding-seedling me-2"></i>${t('care_tips', currentLanguage)}</h6>
+                        <p class="mb-0">${result.care_tips}</p>
+                    </div>
+                ` : ''}
+
+                <div class="d-flex gap-2 mt-4">
+                    <button class="btn btn-success" onclick="downloadReport(${analysis.id}, 'pdf')">
+                        <i class="fas fa-file-pdf me-2"></i>${t('download_pdf', currentLanguage)}
+                    </button>
+                    <button class="btn btn-outline-success" onclick="downloadReport(${analysis.id}, 'image')">
+                        <i class="fas fa-image me-2"></i>${t('download_image', currentLanguage)}
+                    </button>
+                    <button class="btn btn-outline-danger ms-auto" onclick="deleteAnalysis(${analysis.id})">
+                        <i class="fas fa-trash me-2"></i>${t('delete', currentLanguage)}
+                    </button>
+                </div>
+            `;
+        }
+
+        async function downloadReport(analysisId, format) {
+            try {
+                const response = await fetch(`${API_BASE}/history/${analysisId}/report?format=${format}&language=${currentLanguage}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `plant-analysis-${analysisId}.${format === 'pdf' ? 'pdf' : 'png'}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                } else {
+                    alert(t('download_failed', currentLanguage));
+                }
+            } catch (error) {
+                console.error('Error downloading report:', error);
+                alert(t('download_failed', currentLanguage));
+            }
+        }
+
+        async function deleteAnalysis(analysisId) {
+            if (!confirm(t('confirm_delete_analysis', currentLanguage))) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/history/${analysisId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    historyData = historyData.filter(item => item.id !== analysisId);
+                    renderHistory(historyData);
+                    document.getElementById('detailView').style.display = 'none';
+                    document.getElementById('emptyDetail').style.display = 'block';
+                    selectedAnalysisId = null;
+                }
+            } catch (error) {
+                console.error('Error deleting analysis:', error);
+            }
+        }
+
+        function changeLanguage(lang, save = true) {
+            currentLanguage = lang;
+            localStorage.setItem('language', lang);
+            
+            const langNames = { en: 'English', hi: 'हिंदी', mr: 'मराठी' };
+            document.getElementById('currentLang').textContent = langNames[lang];
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key, lang);
+            });
+            
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                el.placeholder = t(key, lang);
+            });
+            
+            if (save) {
+                fetch(`${API_BASE}/auth/language`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ language: lang })
+                });
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            window.location.href = '/login';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            return new Date(dateStr).toLocaleDateString();
+        }
+
+        function formatTime(dateStr) {
+            if (!dateStr) return '';
+            return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function getHealthClass(score) {
+            if (!score) return 'health-moderate';
+            if (score >= 70) return 'health-good';
+            if (score >= 40) return 'health-moderate';
+            return 'health-poor';
+        }
+    </script>
+</body>
+</html>

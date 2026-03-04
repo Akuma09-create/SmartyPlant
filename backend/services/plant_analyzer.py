@@ -3,6 +3,7 @@ Plant analysis service.
 Integrates image processing and disease detection for comprehensive plant analysis.
 """
 
+import numpy as np
 from typing import Optional, Dict, List
 from models import PlantDiseaseDetector
 from .image_processor import ImageProcessor
@@ -187,7 +188,3 @@ class PlantAnalyzer:
             results.append(result)
         
         return results
-
-
-# Import numpy for severity analysis
-import numpy as np

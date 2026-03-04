@@ -11,21 +11,75 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <nav class="navbar navbar-dark app-navbar">
+    <nav class="navbar navbar-expand-lg navbar-dark app-navbar">
         <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1"><i class="fas fa-leaf"></i> Smart Plant Health Assistant</span>
-            <div class="d-flex align-items-center gap-3">
-                <span class="navbar-text text-white" id="userDisplay">Guest</span>
-                <a href="/login" class="btn btn-sm btn-outline-light" id="loginLink">Login</a>
-                <button class="btn btn-sm btn-light d-none" id="logoutBtn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <a class="navbar-brand mb-0 h1" href="/"><i class="fas fa-leaf"></i> <span data-i18n="app_name">Smart Plant Health Assistant</span></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/" data-i18n="nav_analyze">Analyze Plant</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/plants" data-i18n="nav_my_plants">My Plants</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/history" data-i18n="nav_history">History</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Language Selector -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown">
+                            <i class="fas fa-globe me-1"></i> <span id="currentLang">English</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('en')">🇬🇧 English</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('hi')">🇮🇳 हिंदी</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('mr')">🇮🇳 मराठी</a></li>
+                        </ul>
+                    </div>
+                    <!-- Notifications -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown">
+                            <i class="fas fa-bell"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display: none;">0</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-3" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                            <h6 class="dropdown-header" data-i18n="notifications">Notifications</h6>
+                            <div id="notificationList">
+                                <p class="text-muted text-center small" data-i18n="no_notifications">No notifications</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- User Menu -->
+                    <div class="dropdown" id="userMenuAuth" style="display: none;">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> <span id="userDisplay">User</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2"></i><span data-i18n="nav_dashboard">Dashboard</span></a></li>
+                            <li><a class="dropdown-item" href="/plants"><i class="fas fa-seedling me-2"></i><span data-i18n="nav_my_plants">My Plants</span></a></li>
+                            <li><a class="dropdown-item" href="/history"><i class="fas fa-history me-2"></i><span data-i18n="nav_history">History</span></a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span></a></li>
+                        </ul>
+                    </div>
+                    <a href="/login" class="btn btn-sm btn-outline-light" id="loginLink">Login</a>
+                </div>
             </div>
         </div>
     </nav>
 
     <div class="hero-section">
         <div class="container text-center py-5">
-            <h1 class="hero-title"><i class="fas fa-seedling"></i> Smart Plant Health Assistant</h1>
-            <p class="hero-subtitle">Upload a photo of your plant and get instant AI-powered disease detection and care recommendations</p>
+            <h1 class="hero-title"><i class="fas fa-seedling"></i> <span data-i18n="app_name">Smart Plant Health Assistant</span></h1>
+            <p class="hero-subtitle" data-i18n="hero_subtitle">Upload a photo of your plant and get instant AI-powered disease detection and care recommendations</p>
         </div>
     </div>
 
@@ -36,34 +90,68 @@
                 <!-- UPLOAD -->
                 <div class="card shadow-lg mb-4">
                     <div class="card-header upload-card-header">
-                        <h5 class="mb-0"><i class="fas fa-cloud-upload-alt"></i> Upload Plant Image</h5>
+                        <h5 class="mb-0"><i class="fas fa-cloud-upload-alt"></i> <span data-i18n="upload_plant_image">Upload Plant Image</span></h5>
                     </div>
                     <div class="card-body">
                         <form id="uploadForm" enctype="multipart/form-data">
                             <div class="upload-zone" id="uploadZone">
                                 <i class="fas fa-cloud-upload-alt"></i>
-                                <p class="mt-3">Drag and drop your plant image here</p>
-                                <p class="text-muted">or</p>
-                                <button type="button" class="btn btn-success" onclick="document.getElementById('fileInput').click()">Choose File</button>
+                                <p class="mt-3" data-i18n="drag_drop_image">Drag and drop your plant image here</p>
+                                <p class="text-muted" data-i18n="or">or</p>
+                                <button type="button" class="btn btn-success" onclick="document.getElementById('fileInput').click()" data-i18n="choose_file">Choose File</button>
                                 <input type="file" id="fileInput" accept="image/*" style="display: none;">
                             </div>
                             <div id="previewContainer" class="mt-4" style="display: none;">
                                 <img id="previewImage" src="" alt="Preview" class="img-fluid rounded" style="max-width: 100%;">
-                                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="clearImage()"><i class="fas fa-trash"></i> Clear</button>
+                                <button type="button" class="btn btn-sm btn-danger mt-2" onclick="clearImage()"><i class="fas fa-trash"></i> <span data-i18n="clear">Clear</span></button>
                             </div>
                             <div class="mt-4">
-                                <label for="confidenceThreshold" class="form-label">Confidence Threshold: <span id="thresholdValue">0.7</span></label>
+                                <label for="confidenceThreshold" class="form-label"><span data-i18n="confidence_threshold">Confidence Threshold</span>: <span id="thresholdValue">0.7</span></label>
                                 <input type="range" class="form-range" id="confidenceThreshold" min="0.5" max="1.0" step="0.05" value="0.7">
-                                <small class="text-muted">Higher values = more confident predictions</small>
+                                <small class="text-muted" data-i18n="confidence_hint">Higher values = more confident predictions</small>
                             </div>
                             <div class="mt-4">
-                                <button type="submit" class="btn btn-success btn-lg w-100" id="analyzeBtn"><i class="fas fa-microscope"></i> Analyze Plant</button>
+                                <button type="submit" class="btn btn-success btn-lg w-100" id="analyzeBtn"><i class="fas fa-microscope"></i> <span data-i18n="analyze_plant">Analyze Plant</span></button>
                             </div>
                         </form>
                         <div id="loadingSpinner" class="text-center mt-4" style="display: none;">
-                            <div class="spinner-border text-success" role="status"><span class="visually-hidden">Analyzing...</span></div>
-                            <p class="mt-2 text-muted">🔬 AI is analyzing your plant...</p>
-                            <p class="small text-muted">This may take a few seconds</p>
+                            <div class="spinner-border text-success" role="status"><span class="visually-hidden" data-i18n="analyzing">Analyzing...</span></div>
+                            <p class="mt-2 text-muted" data-i18n="ai_analyzing">🔬 AI is analyzing your plant...</p>
+                            <p class="small text-muted" data-i18n="please_wait">This may take a few seconds</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============ LOADING SKELETON ============ -->
+                <div id="loadingSkeleton" style="display: none;">
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <div class="skeleton-card">
+                                <div class="skeleton skeleton-title"></div>
+                                <div class="skeleton skeleton-text" style="width: 80%"></div>
+                                <div class="skeleton skeleton-text" style="width: 60%"></div>
+                                <div class="skeleton skeleton-text" style="width: 70%"></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="skeleton-card">
+                                <div class="skeleton skeleton-title"></div>
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="skeleton" style="width: 100px; height: 100px; border-radius: 50%;"></div>
+                                    <div style="flex: 1;">
+                                        <div class="skeleton skeleton-text"></div>
+                                        <div class="skeleton skeleton-text" style="width: 60%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="skeleton-card">
+                                <div class="skeleton skeleton-title"></div>
+                                <div class="skeleton skeleton-text"></div>
+                                <div class="skeleton skeleton-text" style="width: 90%"></div>
+                                <div class="skeleton skeleton-text" style="width: 75%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -75,7 +163,7 @@
                     <div class="card plant-id-card mb-4" id="plantInfoCard" style="display:none;">
                         <div class="plant-header-bar">
                             <div class="d-flex align-items-center justify-content-between">
-                                <h5 class="mb-0 text-white fw-bold"><i class="fas fa-leaf me-2"></i>Plant Identified</h5>
+                                <h5 class="mb-0 text-white fw-bold"><i class="fas fa-leaf me-2"></i><span data-i18n="plant_identified">Plant Identified</span></h5>
                                 <span class="plant-type-pill" id="plantTypeBadge">🌿 Plant</span>
                             </div>
                         </div>
@@ -90,34 +178,34 @@
                             <!-- Quick Facts Row -->
                             <div class="row g-3 mb-4">
                                 <div class="col-4">
-                                    <div class="qfact"><span class="qfact-icon">🏷️</span><small class="text-muted">Family</small><strong id="plantFamily">-</strong></div>
+                                    <div class="qfact"><span class="qfact-icon">🏷️</span><small class="text-muted" data-i18n="family">Family</small><strong id="plantFamily">-</strong></div>
                                 </div>
                                 <div class="col-4">
-                                    <div class="qfact"><span class="qfact-icon">🌿</span><small class="text-muted">Type</small><strong id="plantTypeInfo">-</strong></div>
+                                    <div class="qfact"><span class="qfact-icon">🌿</span><small class="text-muted" data-i18n="type">Type</small><strong id="plantTypeInfo">-</strong></div>
                                 </div>
                                 <div class="col-4">
-                                    <div class="qfact"><span class="qfact-icon">🌍</span><small class="text-muted">Origin</small><strong id="plantOrigin">-</strong></div>
+                                    <div class="qfact"><span class="qfact-icon">🌍</span><small class="text-muted" data-i18n="origin">Origin</small><strong id="plantOrigin">-</strong></div>
                                 </div>
                             </div>
                             <!-- Conditions + Care -->
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="styled-box">
-                                        <h6 class="styled-box-title">☀️ Ideal Conditions</h6>
-                                        <div class="cond-row"><span class="cond-dot sun"></span><span class="cond-k">Sunlight</span><span class="cond-v" id="idealSunlight">-</span></div>
-                                        <div class="cond-row"><span class="cond-dot temp"></span><span class="cond-k">Temperature</span><span class="cond-v" id="idealTemp">-</span></div>
-                                        <div class="cond-row"><span class="cond-dot water"></span><span class="cond-k">Humidity</span><span class="cond-v" id="idealHumidity">-</span></div>
-                                        <div class="cond-row"><span class="cond-dot soil"></span><span class="cond-k">Soil</span><span class="cond-v" id="idealSoil">-</span></div>
+                                        <h6 class="styled-box-title">☀️ <span data-i18n="ideal_conditions">Ideal Conditions</span></h6>
+                                        <div class="cond-row"><span class="cond-dot sun"></span><span class="cond-k" data-i18n="sunlight">Sunlight</span><span class="cond-v" id="idealSunlight">-</span></div>
+                                        <div class="cond-row"><span class="cond-dot temp"></span><span class="cond-k" data-i18n="temperature">Temperature</span><span class="cond-v" id="idealTemp">-</span></div>
+                                        <div class="cond-row"><span class="cond-dot water"></span><span class="cond-k" data-i18n="humidity">Humidity</span><span class="cond-v" id="idealHumidity">-</span></div>
+                                        <div class="cond-row"><span class="cond-dot soil"></span><span class="cond-k" data-i18n="soil">Soil</span><span class="cond-v" id="idealSoil">-</span></div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="styled-box">
-                                        <h6 class="styled-box-title">🌱 General Care</h6>
-                                        <div class="gcare" id="generalWatering">💧 <strong>Watering:</strong> -</div>
-                                        <div class="gcare" id="generalFertilizing">🧪 <strong>Fertilizing:</strong> -</div>
-                                        <div class="gcare" id="generalPruning">✂️ <strong>Pruning:</strong> -</div>
+                                        <h6 class="styled-box-title">🌱 <span data-i18n="general_care">General Care</span></h6>
+                                        <div class="gcare" id="generalWatering">💧 <strong data-i18n="watering">Watering</strong>: -</div>
+                                        <div class="gcare" id="generalFertilizing">🧪 <strong data-i18n="fertilizing">Fertilizing</strong>: -</div>
+                                        <div class="gcare" id="generalPruning">✂️ <strong data-i18n="pruning">Pruning</strong>: -</div>
                                         <div id="commonIssuesDiv" class="mt-2" style="display:none;">
-                                            <small class="fw-bold text-muted">⚠️ Common Issues</small>
+                                            <small class="fw-bold text-muted">⚠️ <span data-i18n="common_issues">Common Issues</span></small>
                                             <div id="commonIssuesList" class="issue-chips mt-1"></div>
                                         </div>
                                     </div>
@@ -130,7 +218,7 @@
                     <div class="card disease-card mb-4" id="diseaseCard">
                         <div class="disease-header-bar">
                             <div class="d-flex align-items-center justify-content-between">
-                                <h5 class="mb-0 text-white fw-bold"><i class="fas fa-stethoscope me-2"></i>Disease Analysis</h5>
+                                <h5 class="mb-0 text-white fw-bold"><i class="fas fa-stethoscope me-2"></i><span data-i18n="disease_analysis">Disease Analysis</span></h5>
                                 <span id="severityBadge" class="sev-pill">-</span>
                             </div>
                         </div>
@@ -144,18 +232,18 @@
                                     <p id="diseaseDescription" class="dis-desc mb-4">-</p>
 
                                     <div id="symptomsSection" style="display:none;" class="mb-4">
-                                        <h6 class="sec-head"><i class="fas fa-search-plus text-info me-2"></i>Symptoms Observed</h6>
+                                        <h6 class="sec-head"><i class="fas fa-search-plus text-info me-2"></i><span data-i18n="symptoms_observed">Symptoms Observed</span></h6>
                                         <div id="symptomsList" class="symptom-chips"></div>
                                     </div>
                                     <div>
-                                        <h6 class="sec-head"><i class="fas fa-exclamation-circle text-warning me-2"></i>Probable Causes</h6>
+                                        <h6 class="sec-head"><i class="fas fa-exclamation-circle text-warning me-2"></i><span data-i18n="probable_causes">Probable Causes</span></h6>
                                         <div id="causesList"></div>
                                     </div>
                                 </div>
                                 <div class="col-lg-5">
                                     <!-- Gauge -->
                                     <div class="gauge-card mb-4">
-                                        <h6 class="text-center fw-bold mb-3">Health Score</h6>
+                                        <h6 class="text-center fw-bold mb-3" data-i18n="health_score">Health Score</h6>
                                         <div class="gauge-wrap">
                                             <svg viewBox="0 0 120 120" class="gauge-svg">
                                                 <circle cx="60" cy="60" r="50" fill="none" stroke="#edf2f7" stroke-width="8"/>
@@ -174,7 +262,7 @@
                                     <!-- Confidence -->
                                     <div class="mb-4">
                                         <div class="d-flex justify-content-between mb-2">
-                                            <small class="fw-bold">AI Confidence</small>
+                                            <small class="fw-bold" data-i18n="ai_confidence">AI Confidence</small>
                                             <span id="confidenceText" class="fw-bold small">-</span>
                                         </div>
                                         <div class="progress" style="height:10px; border-radius:5px;">
@@ -186,7 +274,7 @@
                                         <div class="risk-box">
                                             <div class="risk-emoji">⚠️</div>
                                             <div>
-                                                <strong class="text-danger">Risk if Untreated</strong>
+                                                <strong class="text-danger" data-i18n="risk_if_untreated">Risk if Untreated</strong>
                                                 <p id="riskText" class="mb-0 small text-muted mt-1"></p>
                                             </div>
                                         </div>
@@ -199,51 +287,59 @@
                     <!-- 💊 CARE & TREATMENT CARD -->
                     <div class="card care-card mb-4" id="careCard">
                         <div class="care-header-bar">
-                            <h5 class="mb-0 text-white fw-bold"><i class="fas fa-hand-holding-medical me-2"></i>Treatment & Care Plan</h5>
+                            <h5 class="mb-0 text-white fw-bold"><i class="fas fa-hand-holding-medical me-2"></i><span data-i18n="treatment_care_plan">Treatment & Care Plan</span></h5>
                         </div>
                         <div class="card-body p-4">
                             <div class="alert" id="urgencyAlert"></div>
                             <div class="row g-4">
                                 <div class="col-md-6">
                                     <div class="mb-4">
-                                        <h6 class="sec-head"><i class="fas fa-bolt text-danger me-2"></i>Immediate Actions</h6>
+                                        <h6 class="sec-head"><i class="fas fa-bolt text-danger me-2"></i><span data-i18n="immediate_actions">Immediate Actions</span></h6>
                                         <div id="priorityActions"></div>
                                     </div>
                                     <div class="mb-4">
-                                        <h6 class="sec-head"><i class="fas fa-tint text-primary me-2"></i>Watering Guide</h6>
+                                        <h6 class="sec-head"><i class="fas fa-tint text-primary me-2"></i><span data-i18n="watering_guide">Watering Guide</span></h6>
                                         <div id="wateringGuide" class="styled-panel"></div>
                                     </div>
                                     <div class="mb-4">
-                                        <h6 class="sec-head"><i class="fas fa-flask text-success me-2"></i>Fertilizing</h6>
+                                        <h6 class="sec-head"><i class="fas fa-flask text-success me-2"></i><span data-i18n="fertilizing">Fertilizing</span></h6>
                                         <div id="fertilizingGuide" class="styled-panel"></div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-4">
-                                        <h6 class="sec-head"><i class="fas fa-pills text-info me-2"></i>Treatment Options</h6>
+                                        <h6 class="sec-head"><i class="fas fa-pills text-info me-2"></i><span data-i18n="treatment_options">Treatment Options</span></h6>
                                         <ul class="nav nav-pills treat-tabs mb-3" role="tablist">
-                                            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#organic">🌿 Organic</button></li>
-                                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#chemical">💊 Chemical</button></li>
-                                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cultural">🌱 Cultural</button></li>
+                                            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#organic">🌿 <span data-i18n="organic">Organic</span></button></li>
+                                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#chemical">💊 <span data-i18n="chemical">Chemical</span></button></li>
+                                            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#cultural">🌱 <span data-i18n="cultural">Cultural</span></button></li>
                                         </ul>
                                         <div class="tab-content">
                                             <div class="tab-pane fade show active" id="organic"><div id="organicTreatment"></div></div>
                                             <div class="tab-pane fade" id="chemical"><div id="chemicalTreatment"></div></div>
                                             <div class="tab-pane fade" id="cultural"><div id="culturalTreatment"></div></div>
                                         </div>
+                                        <!-- Start Treatment Button -->
+                                        <button type="button" class="btn btn-success btn-lg w-100 mt-3 start-treatment-btn" id="startTreatmentBtn" onclick="openTreatmentModal()" style="display: none;">
+                                            <i class="fas fa-play-circle me-2"></i><span data-i18n="start_treatment">Start Treatment</span>
+                                        </button>
+                                        <!-- Save to My Plants Button -->
+                                        <button type="button" class="btn btn-primary btn-lg w-100 mt-2" id="saveToMyPlantsBtn" onclick="saveToMyPlants()" style="display: none;">
+                                            <i class="fas fa-leaf me-2"></i><span data-i18n="save_to_plants">Save to My Plants</span>
+                                        </button>
                                     </div>
                                     <div class="mb-4">
-                                        <h6 class="sec-head"><i class="fas fa-calendar-check text-success me-2"></i>Recovery Timeline</h6>
+                                        <h6 class="sec-head"><i class="fas fa-calendar-check text-success me-2"></i><span data-i18n="recovery_timeline">Recovery Timeline</span></h6>
                                         <div id="timeline"></div>
                                     </div>
                                 </div>
                             </div>
                             <div id="preventionSection" class="mt-3" style="display:none;">
-                                <h6 class="sec-head"><i class="fas fa-shield-alt text-success me-2"></i>Prevention</h6>
+                                <h6 class="sec-head"><i class="fas fa-shield-alt text-success me-2"></i><span data-i18n="prevention">Prevention</span></h6>
                                 <div id="preventionList"></div>
                             </div>
                             <div class="mt-4">
-                                <h6 class="sec-head"><i class="fas fa-lightbulb text-warning me-2"></i>Quick Tips</h6>
+                                <h6 class="sec-head"><i class="fas fa-lightbulb text-warning me-2"></i><span data-i18n="quick_tips">Quick Tips</span></h6>
                                 <div id="tipsList"></div>
                             </div>
                         </div>
@@ -251,10 +347,10 @@
 
                     <!-- Rule-based details -->
                     <div class="card mb-4" id="detailsCard">
-                        <div class="card-header bg-secondary text-white"><h5 class="mb-0"><i class="fas fa-microscope me-2"></i>Detailed Analysis</h5></div>
+                        <div class="card-header bg-secondary text-white"><h5 class="mb-0"><i class="fas fa-microscope me-2"></i><span data-i18n="detailed_analysis">Detailed Analysis</span></h5></div>
                         <div class="card-body p-4">
-                            <h6>Feature Analysis</h6><div id="featureAnalysis" class="styled-panel"></div>
-                            <h6 class="mt-4">ROI Analysis</h6><div id="roiAnalysis" class="styled-panel"></div>
+                            <h6 data-i18n="feature_analysis">Feature Analysis</h6><div id="featureAnalysis" class="styled-panel"></div>
+                            <h6 class="mt-4" data-i18n="roi_analysis">ROI Analysis</h6><div id="roiAnalysis" class="styled-panel"></div>
                         </div>
                     </div>
                 </div>
@@ -287,7 +383,515 @@
             </div>
         </div>
     </footer>
+
+    <!-- Chatbot FAB -->
+    <button class="chat-fab" id="chatFab" onclick="toggleChat()">
+        <i class="fas fa-comments"></i>
+    </button>
+
+    <!-- Chat Panel -->
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-robot me-2"></i><span data-i18n="chat_title">Yuki - Plant Assistant</span></h6>
+                <button class="btn btn-sm btn-light" onclick="toggleChat()"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+                <span data-i18n="chat_welcome">Hello! I'm Yuki, your plant care assistant. Ask me anything about plant health, watering, diseases, or care tips!</span>
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <div class="input-group">
+                <input type="text" class="form-control" id="chatInput" placeholder="Ask about plant care..." data-i18n-placeholder="chat_placeholder" onkeypress="if(event.key==='Enter')sendChatMessage()">
+                <button class="btn btn-success" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .chat-fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 20px rgba(40, 167, 69, 0.5);
+            font-size: 1.6rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 9999;
+            animation: pulse-fab 2s infinite;
+        }
+        @keyframes pulse-fab {
+            0%, 100% { box-shadow: 0 4px 20px rgba(40, 167, 69, 0.5); }
+            50% { box-shadow: 0 4px 30px rgba(40, 167, 69, 0.8), 0 0 0 10px rgba(40, 167, 69, 0.1); }
+        }
+        .chat-fab:hover { 
+            transform: scale(1.15) rotate(10deg); 
+            animation: none;
+        }
+        .chat-panel {
+            position: fixed;
+            bottom: 110px;
+            right: 30px;
+            width: 380px;
+            height: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+            display: none;
+            flex-direction: column;
+            z-index: 9998;
+            animation: slideInUp 0.3s ease-out;
+        }
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .chat-panel.show { display: flex; }
+        .chat-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 18px;
+            border-radius: 20px 20px 0 0;
+        }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 15px; }
+        .chat-input-area { padding: 15px; border-top: 1px solid #eee; }
+        .message { 
+            margin-bottom: 15px; 
+            max-width: 80%; 
+            animation: fadeInMessage 0.3s ease-out;
+        }
+        @keyframes fadeInMessage {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.user { margin-left: auto; background: #e8f5e9; padding: 12px 16px; border-radius: 18px 18px 4px 18px; }
+        .message.assistant { background: #f8f9fa; padding: 12px 16px; border-radius: 18px 18px 18px 4px; }
+    </style>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/translations.js"></script>
     <script src="js/app.js"></script>
+    <script>
+        // Check auth and update UI
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            const userName = localStorage.getItem('userName');
+            if (token) {
+                document.getElementById('loginLink').style.display = 'none';
+                document.getElementById('userMenuAuth').style.display = 'block';
+                document.getElementById('userDisplay').textContent = userName || 'User';
+            } else {
+                document.getElementById('loginLink').style.display = 'inline-block';
+                document.getElementById('userMenuAuth').style.display = 'none';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userName');
+            window.location.href = '/login';
+        }
+
+        // Chat functions
+        function toggleChat() {
+            document.getElementById('chatPanel').classList.toggle('show');
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.innerHTML += `<div class="message user">${message}</div>`;
+            input.value = '';
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const lang = localStorage.getItem('language') || 'en';
+                const response = await fetch('/api/v1/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    },
+                    body: JSON.stringify({ message, language: lang })
+                });
+                const data = await response.json();
+                messagesDiv.innerHTML += `<div class="message assistant">${data.response || data.message || 'Sorry, I could not process that.'}</div>`;
+            } catch (e) {
+                messagesDiv.innerHTML += `<div class="message assistant text-danger">Error connecting to assistant.</div>`;
+            }
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Language functions - using translations.js system
+        function changeLanguage(lang) {
+            if (typeof setLanguage === 'function') {
+                setLanguage(lang);
+            }
+            const langNames = { en: 'English', hi: 'हिंदी', mr: 'मराठी' };
+            document.getElementById('currentLang').textContent = langNames[lang] || 'English';
+        }
+
+        // Load notifications
+        async function loadNotifications() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) return;
+                const response = await fetch('/api/v1/notifications', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                const notifications = data.notifications || [];
+                const unread = notifications.filter(n => !n.read).length;
+                const badge = document.getElementById('notificationBadge');
+                const list = document.getElementById('notificationList');
+                
+                if (unread > 0) {
+                    badge.textContent = unread;
+                    badge.style.display = 'inline';
+                } else {
+                    badge.style.display = 'none';
+                }
+                
+                if (notifications.length > 0) {
+                    list.innerHTML = notifications.slice(0, 5).map(n => `
+                        <div class="p-2 mb-2 rounded ${n.read ? 'bg-light' : 'bg-success bg-opacity-10'}" style="font-size: 0.85rem;">
+                            <strong>${n.title}</strong><br>
+                            <small class="text-muted">${n.message}</small>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.log('Could not load notifications');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            const lang = localStorage.getItem('language') || 'en';
+            const langNames = { en: 'English', hi: 'हिंदी', mr: 'मराठी' };
+            document.getElementById('currentLang').textContent = langNames[lang] || 'English';
+            loadNotifications();
+            // Apply translations on page load
+            if (typeof translatePage === 'function') {
+                translatePage();
+            }
+        });
+
+        // ============ SAVE TO MY PLANTS ============
+        let lastAnalysisResponse = null;
+
+        async function saveToMyPlants() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('Please login first to save plants.');
+                window.location.href = '/login';
+                return;
+            }
+
+            if (!lastAnalysisResponse) {
+                alert('No analysis results to save. Please analyze a plant first.');
+                return;
+            }
+
+            const data = lastAnalysisResponse;
+            const isAI = data.analysis_type === 'ai';
+            const analysis = data.analysis;
+            const carePlan = data.care_plan;
+            const plantInfo = data.plant_info || {};
+
+            // Determine plant name
+            let plantName = '';
+            if (isAI && plantInfo.common_name) {
+                plantName = plantInfo.common_name;
+            } else if (analysis && analysis.plant_type) {
+                plantName = analysis.plant_type;
+            }
+
+            // Ask user for a name if we don't have one
+            const userPlantName = prompt('Enter a name for this plant:', plantName || 'My Plant');
+            if (!userPlantName) return; // cancelled
+
+            const btn = document.getElementById('saveToMyPlantsBtn');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+
+            try {
+                const disease = analysis.disease_detection || {};
+                const body = {
+                    plant_name: userPlantName,
+                    species: plantInfo.scientific_name || plantInfo.common_name || analysis.plant_type || '',
+                    location: '',
+                    disease_name: disease.primary_disease || '',
+                    confidence: disease.confidence || 0,
+                    health_score: disease.health_score || 0,
+                    severity: disease.severity || '',
+                    analysis_details: analysis,
+                    care_plan: carePlan,
+                    language: localStorage.getItem('language') || 'en'
+                };
+
+                const res = await fetch('/api/v1/analyze/save-to-plants', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    btn.innerHTML = '<i class="fas fa-check me-2"></i>Saved!';
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline-success');
+                    alert(result.message || 'Plant saved to My Plants!');
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHTML;
+                    alert('Error: ' + (result.error || result.message || 'Failed to save'));
+                }
+            } catch (e) {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                alert('Error saving plant: ' + e.message);
+            }
+        }
+
+        // ============ TREATMENT WORKFLOW FUNCTIONS ============
+        let currentAnalysisData = null;
+
+        function showStartTreatmentButton(analysisData) {
+            currentAnalysisData = analysisData;
+            const btn = document.getElementById('startTreatmentBtn');
+            if (btn && analysisData && analysisData.disease_name && analysisData.disease_name.toLowerCase() !== 'healthy') {
+                btn.style.display = 'block';
+            } else if (btn) {
+                btn.style.display = 'none';
+            }
+        }
+
+        function openTreatmentModal() {
+            if (!currentAnalysisData) {
+                alert('Please analyze a plant first');
+                return;
+            }
+            
+            // Populate modal with analysis data
+            document.getElementById('treatmentDiseaseName').textContent = currentAnalysisData.disease_name || 'Unknown Disease';
+            document.getElementById('treatmentSeverity').textContent = currentAnalysisData.severity || 'Unknown';
+            document.getElementById('treatmentSeverity').className = 'badge bg-' + getSeverityColor(currentAnalysisData.severity);
+            
+            // Load treatment steps based on selected type
+            const defaultType = 'organic';
+            document.getElementById('treatmentTypeSelect').value = defaultType;
+            loadTreatmentSteps(defaultType);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('treatmentModal'));
+            modal.show();
+        }
+
+        function getSeverityColor(severity) {
+            const colors = { low: 'success', moderate: 'warning', severe: 'danger', critical: 'danger' };
+            return colors[(severity || '').toLowerCase()] || 'secondary';
+        }
+
+        function loadTreatmentSteps(type) {
+            const stepsContainer = document.getElementById('treatmentStepsList');
+            let steps = [];
+            
+            if (currentAnalysisData && currentAnalysisData.care_plan) {
+                const plan = currentAnalysisData.care_plan;
+                if (type === 'organic' && plan.organic_treatments) {
+                    steps = plan.organic_treatments;
+                } else if (type === 'chemical' && plan.chemical_treatments) {
+                    steps = plan.chemical_treatments;
+                } else if (type === 'cultural' && plan.cultural_practices) {
+                    steps = plan.cultural_practices;
+                }
+            }
+            
+            if (steps.length === 0) {
+                steps = ['Follow general care guidelines', 'Monitor plant health daily', 'Adjust watering as needed'];
+            }
+            
+            stepsContainer.innerHTML = steps.map((step, idx) => `
+                <div class="treatment-step-item p-2 border rounded mb-2">
+                    <div class="form-check">
+                        <input class="form-check-input treatment-step-check" type="checkbox" id="step${idx}" data-step="${idx}">
+                        <label class="form-check-label" for="step${idx}">
+                            <strong>Step ${idx + 1}:</strong> ${step}
+                        </label>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function startTreatment() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('Please login first');
+                return;
+            }
+            
+            const treatmentType = document.getElementById('treatmentTypeSelect').value;
+            const plantSelect = document.getElementById('linkPlantSelect');
+            const plantId = plantSelect.value;
+            
+            // Get steps
+            let steps = [];
+            const plan = currentAnalysisData?.care_plan;
+            if (plan) {
+                if (treatmentType === 'organic') steps = plan.organic_treatments || [];
+                else if (treatmentType === 'chemical') steps = plan.chemical_treatments || [];
+                else if (treatmentType === 'cultural') steps = plan.cultural_practices || [];
+            }
+            if (steps.length === 0) steps = ['Follow care guidelines', 'Monitor daily', 'Adjust as needed'];
+            
+            const data = {
+                plant_id: plantId || null,
+                disease_name: currentAnalysisData.disease_name,
+                treatment_type: treatmentType,
+                severity: currentAnalysisData.severity || 'unknown',
+                steps: steps,
+                create_reminders: document.getElementById('createRemindersCheck').checked
+            };
+            
+            try {
+                const res = await fetch('/api/v1/treatments', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await res.json();
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('treatmentModal')).hide();
+                    alert('Treatment started successfully! Track your progress in My Plants.');
+                    // Optionally redirect to plants page
+                    // window.location.href = '/frontend/plants.html';
+                } else {
+                    alert('Error: ' + (result.message || result.error || 'Failed to start treatment'));
+                }
+            } catch (e) {
+                alert('Error starting treatment: ' + e.message);
+            }
+        }
+
+        async function loadUserPlantsForTreatment() {
+            const token = localStorage.getItem('authToken');
+            if (!token) return;
+            
+            try {
+                const res = await fetch('/api/v1/plants', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                const plants = await res.json();
+                const select = document.getElementById('linkPlantSelect');
+                select.innerHTML = '<option value="">-- Select a plant (optional) --</option>';
+                
+                if (Array.isArray(plants)) {
+                    plants.forEach(p => {
+                        select.innerHTML += `<option value="${p.id}">${p.name}${p.species ? ' (' + p.species + ')' : ''}</option>`;
+                    });
+                }
+            } catch (e) {
+                console.log('Could not load plants');
+            }
+        }
+
+        // Load plants when modal opens
+        document.addEventListener('DOMContentLoaded', () => {
+            const treatmentModal = document.getElementById('treatmentModal');
+            if (treatmentModal) {
+                treatmentModal.addEventListener('show.bs.modal', loadUserPlantsForTreatment);
+            }
+        });
+    </script>
+
+    <!-- Treatment Workflow Modal -->
+    <div class="modal fade" id="treatmentModal" tabindex="-1" aria-labelledby="treatmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="treatmentModalLabel">
+                        <i class="fas fa-heartbeat me-2"></i>Start Treatment Plan
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Diagnosis Summary -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="fas fa-stethoscope me-2 text-primary"></i>Diagnosis Summary</h6>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Disease:</strong> <span id="treatmentDiseaseName">-</span>
+                                </div>
+                                <div>
+                                    <strong>Severity:</strong> <span id="treatmentSeverity" class="badge bg-secondary">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Treatment Type Selection -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold"><i class="fas fa-pills me-2 text-info"></i>Choose Treatment Approach</label>
+                        <select class="form-select" id="treatmentTypeSelect" onchange="loadTreatmentSteps(this.value)">
+                            <option value="organic">🌿 Organic Treatment</option>
+                            <option value="chemical">💊 Chemical Treatment</option>
+                            <option value="cultural">🌱 Cultural Practices</option>
+                        </select>
+                    </div>
+
+                    <!-- Treatment Steps -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold"><i class="fas fa-list-check me-2 text-success"></i>Treatment Steps</label>
+                        <div id="treatmentStepsList" class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
+                            <!-- Steps loaded dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Link to Plant -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold"><i class="fas fa-seedling me-2 text-success"></i>Link to My Plant</label>
+                        <select class="form-select" id="linkPlantSelect">
+                            <option value="">-- Select a plant (optional) --</option>
+                        </select>
+                        <small class="text-muted">Link this treatment to a plant in your collection for tracking</small>
+                    </div>
+
+                    <!-- Reminder Option -->
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="createRemindersCheck" checked>
+                        <label class="form-check-label" for="createRemindersCheck">
+                            <i class="fas fa-bell me-1 text-warning"></i>Create treatment reminders
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success btn-lg" onclick="startTreatment()">
+                        <i class="fas fa-play me-2"></i>Begin Treatment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

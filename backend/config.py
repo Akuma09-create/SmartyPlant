@@ -90,6 +90,34 @@ class Config:
     RATELIMIT_ENABLED = os.getenv('RATELIMIT_ENABLED', 'False').lower() == 'true'
     RATELIMIT_STORAGE_URL = os.getenv('RATELIMIT_STORAGE_URL', 'memory://')
     
+    # Language Support
+    DEFAULT_LANGUAGE = os.getenv('DEFAULT_LANGUAGE', 'en')
+    SUPPORTED_LANGUAGES = ['en', 'hi', 'mr']
+    
+    # Email Configuration (Flask-Mail)
+    MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+    MAIL_PORT = int(os.getenv('MAIL_PORT', '587'))
+    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'True').lower() == 'true'
+    MAIL_USE_SSL = os.getenv('MAIL_USE_SSL', 'False').lower() == 'true'
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'noreply@plantcare.local')
+    
+    # Push Notifications (Web Push / VAPID)
+    VAPID_PRIVATE_KEY = os.getenv('VAPID_PRIVATE_KEY')
+    VAPID_PUBLIC_KEY = os.getenv('VAPID_PUBLIC_KEY')
+    VAPID_CLAIMS_EMAIL = os.getenv('VAPID_CLAIMS_EMAIL', 'mailto:admin@plantcare.local')
+    
+    # Scheduler Settings
+    SCHEDULER_ENABLED = os.getenv('SCHEDULER_ENABLED', 'True').lower() == 'true'
+    REMINDER_CHECK_INTERVAL_MINUTES = int(os.getenv('REMINDER_CHECK_INTERVAL', '60'))
+    
+    # Reports directory
+    REPORTS_FOLDER = os.getenv(
+        'REPORTS_FOLDER',
+        str(PROJECT_ROOT / 'reports')
+    )
+    
     @classmethod
     def validate_required_keys(cls):
         """
@@ -151,6 +179,24 @@ class ProductionConfig(Config):
     """Production configuration."""
     SESSION_COOKIE_SECURE = True
     DEBUG = False
+    
+    @classmethod
+    def validate_production_secrets(cls):
+        """
+        Validate that production has secure secrets.
+        Called during app startup in production mode.
+        """
+        secret_key = os.getenv('SECRET_KEY')
+        if not secret_key or secret_key == 'dev-secret-key-change-in-production':
+            raise ValueError(
+                "CRITICAL: Production requires a secure SECRET_KEY. "
+                "Set a strong random SECRET_KEY environment variable. "
+                "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+            )
+        if len(secret_key) < 32:
+            raise ValueError(
+                "SECRET_KEY is too short. Use at least 32 characters for production."
+            )
 
 
 def get_config(env=None):

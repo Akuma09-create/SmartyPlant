@@ -6,6 +6,7 @@ from .care_advisor import CareAdvisor
 from .ai_analyzer import AIAnalyzer, get_analyzer
 from .logic_engine import LogicEngine
 from .gemini_analyzer import GeminiAnalyzer, get_gemini_analyzer
+from .perenual_api import PerenualAPI, get_perenual_api
 
 __all__ = [
     'ImageProcessor',
@@ -15,5 +16,7 @@ __all__ = [
     'get_analyzer',
     'LogicEngine',
     'GeminiAnalyzer',
-    'get_gemini_analyzer'
+    'get_gemini_analyzer',
+    'PerenualAPI',
+    'get_perenual_api'
 ]

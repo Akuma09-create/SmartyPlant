@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory, request
 from flask_cors import CORS
 from sqlalchemy import text
 
@@ -18,6 +18,9 @@ from models.database_models import db
 
 # Setup logging
 logger = logging.getLogger(__name__)
+
+# Global limiter variable (initialized in create_app)
+limiter = None
 
 
 def create_app(env=None):
@@ -65,6 +68,36 @@ def create_app(env=None):
         }
     })
     
+    # Initialize rate limiting
+    global limiter
+    if app.config.get('RATELIMIT_ENABLED', False):
+        try:
+            from flask_limiter import Limiter
+            from flask_limiter.util import get_remote_address
+            
+            limiter = Limiter(
+                key_func=get_remote_address,
+                app=app,
+                storage_uri=app.config.get('RATELIMIT_STORAGE_URL', 'memory://'),
+                default_limits=["200 per day", "50 per hour"]
+            )
+            
+            # Add rate limit exceeded handler
+            @app.errorhandler(429)
+            def handle_rate_limit_exceeded(e):
+                return jsonify({
+                    'success': False,
+                    'error': 'Rate limit exceeded',
+                    'message': 'Too many requests. Please try again later.',
+                    'retry_after': e.description
+                }), 429
+            
+            logger.info("Rate limiting enabled")
+        except ImportError:
+            logger.warning("Flask-Limiter not installed. Rate limiting disabled.")
+    else:
+        logger.info("Rate limiting disabled (set RATELIMIT_ENABLED=true to enable)")
+    
     # Configure logging
     _configure_logging(app)
     
@@ -81,6 +114,21 @@ def create_app(env=None):
     with app.app_context():
         db.create_all()
         logger.info("Database initialized successfully")
+        
+        # Initialize auth manager with database
+        from auth import init_auth
+        init_auth(db)
+        logger.info("Auth manager initialized with database")
+        
+        # Initialize notification service with database
+        from services.notification_service import notification_service
+        notification_service.set_db(db)
+        logger.info("Notification service initialized with database")
+        
+        # Initialize chat service with database
+        from services.chat_service import chat_service
+        chat_service.set_db(db)
+        logger.info("Chat service initialized with database")
     
     logger.info(f"Flask app initialized for {env or 'development'} environment")
     
@@ -137,10 +185,20 @@ def _register_blueprints(app):
     try:
         from routes import health_bp, analysis_bp
         from routes.auth_routes import auth_routes
+        from routes.chat_routes import chat_routes
+        from routes.notification_routes import notification_routes
+        from routes.plant_routes import plant_routes
+        from routes.history_routes import history_routes
+        from routes.treatment_routes import treatment_routes
         
         app.register_blueprint(health_bp, url_prefix='/api/v1')
         app.register_blueprint(analysis_bp, url_prefix='/api/v1')
         app.register_blueprint(auth_routes)
+        app.register_blueprint(chat_routes)
+        app.register_blueprint(notification_routes)
+        app.register_blueprint(plant_routes)
+        app.register_blueprint(history_routes)
+        app.register_blueprint(treatment_routes)
         
         logger.info("Blueprints registered successfully")
     except ImportError as e:
@@ -225,6 +283,7 @@ def _register_status_routes(app):
     frontend_dir = Path(app.config.get('FRONTEND_DIR', Config.FRONTEND_DIR)).resolve()
     
     @app.route('/', methods=['GET'])
+    @app.route('/index.html', methods=['GET'])
     def root():
         """Serve the main app UI."""
         return send_from_directory(str(frontend_dir), 'index.html', mimetype='text/html')
@@ -245,9 +304,45 @@ def _register_status_routes(app):
         return send_from_directory(frontend_dir / 'assets', path)
     
     @app.route('/login')
+    @app.route('/login.html')
     def serve_login():
         """Serve login page."""
         return send_from_directory(frontend_dir, 'login.html')
+    
+    @app.route('/dashboard')
+    @app.route('/dashboard.html')
+    def serve_dashboard():
+        """Serve dashboard page."""
+        return send_from_directory(frontend_dir, 'dashboard.html')
+    
+    @app.route('/plants')
+    @app.route('/plants.html')
+    def serve_plants():
+        """Serve plants management page."""
+        return send_from_directory(frontend_dir, 'plants.html')
+    
+    @app.route('/history')
+    @app.route('/history.html')
+    def serve_history():
+        """Serve history page."""
+        return send_from_directory(frontend_dir, 'history.html')
+    
+    @app.route('/home')
+    @app.route('/home.html')
+    def serve_home():
+        """Serve home/analysis page."""
+        return send_from_directory(frontend_dir, 'home.html')
+    
+    @app.route('/frontend/<path:filename>')
+    def serve_frontend_files(filename):
+        """Serve any file from the frontend directory."""
+        return send_from_directory(frontend_dir, filename)
+    
+    @app.route('/uploads/<path:filename>')
+    def serve_uploads(filename):
+        """Serve uploaded files."""
+        upload_dir = Path(app.config.get('UPLOAD_FOLDER', Config.UPLOAD_FOLDER)).resolve()
+        return send_from_directory(upload_dir, filename)
     
     @app.route('/api/v1/status', methods=['GET'])
     def status():

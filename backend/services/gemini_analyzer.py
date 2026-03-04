@@ -14,8 +14,32 @@ from io import BytesIO
 logger = logging.getLogger(__name__)
 
 
+# ── Language instruction for prompts ──────────────
+LANGUAGE_INSTRUCTIONS = {
+    'hi': '''
+
+**CRITICAL LANGUAGE REQUIREMENT:**
+आपको हिंदी में जवाब देना होगा।
+You MUST write ALL text values in the JSON response in HINDI (हिंदी) language.
+This includes: disease_name, description, symptoms_observed, causes, immediate_actions, treatment options, prevention tips, and ALL other text fields.
+Only keep scientific names in English (Latin). Everything else must be in Hindi using Devanagari script.
+Example: "disease_name": "चूर्ण आसिता (Powdery Mildew)"
+''',
+    'mr': '''
+
+**CRITICAL LANGUAGE REQUIREMENT:**
+तुम्हाला मराठीत उत्तर द्यायचे आहे.
+You MUST write ALL text values in the JSON response in MARATHI (मराठी) language.
+This includes: disease_name, description, symptoms_observed, causes, immediate_actions, treatment options, prevention tips, and ALL other text fields.
+Only keep scientific names in English (Latin). Everything else must be in Marathi using Devanagari script.
+Example: "disease_name": "भुरी बुरशी (Powdery Mildew)"
+''',
+    'en': ''  # English is default, no extra instruction needed
+}
+
+
 # ── Step 1 prompt: Identify the plant + disease from the image ──────────────
-IMAGE_ANALYSIS_PROMPT = """You are an expert plant pathologist and botanist.
+IMAGE_ANALYSIS_PROMPT_BASE = """You are an expert plant pathologist and botanist.
 Analyze this plant image carefully.
 
 1. IDENTIFY the plant species (common name and scientific name).
@@ -60,11 +84,22 @@ IMPORTANT:
 """
 
 
+def get_image_analysis_prompt(lang: str = 'en') -> str:
+    """Get the image analysis prompt with language instruction."""
+    lang_instruction = LANGUAGE_INSTRUCTIONS.get(lang, '')
+    if lang_instruction:
+        # Add language instruction at the BEGINNING for better compliance
+        return lang_instruction + "\n\n" + IMAGE_ANALYSIS_PROMPT_BASE
+    return IMAGE_ANALYSIS_PROMPT_BASE
+
+
 # ── Step 2: Search internet for detailed disease info & cures ────────
-def get_disease_search_prompt(plant_name, disease_name, symptoms):
+def get_disease_search_prompt(plant_name, disease_name, symptoms, lang: str = 'en'):
     """Build a prompt that tells Gemini to search the internet for disease details."""
     symptom_text = ", ".join(symptoms) if symptoms else "general decline"
-    return f"""Search the internet for comprehensive information about the plant disease described below.
+    lang_instruction = LANGUAGE_INSTRUCTIONS.get(lang, '')
+    
+    base_prompt = f"""Search the internet for comprehensive information about the plant disease described below.
 Find REAL, up-to-date treatment solutions, specific product names, and scientific information.
 
 Plant: {plant_name}
@@ -121,6 +156,11 @@ IMPORTANT: Search the internet for the LATEST and most ACCURATE treatment inform
 Include specific product names, dosages, and frequencies that are commonly available.
 Give REAL, practical advice a home gardener can follow immediately."""
 
+    if lang_instruction:
+        # Add language instruction at the BEGINNING for better compliance
+        return lang_instruction + "\n\n" + base_prompt
+    return base_prompt
+
 
 class GeminiAnalyzer:
     """
@@ -131,34 +171,79 @@ class GeminiAnalyzer:
     2. Search internet (via Google Search grounding) -> get detailed cure & treatment info
     
     This ensures the app provides real, internet-sourced disease information and cures.
+    
+    Supports multiple API keys for rotation when rate limited.
+    Set GEMINI_API_KEYS=key1,key2,key3 or GEMINI_API_KEY + GEMINI_API_KEY_2 + GEMINI_API_KEY_3
     """
 
     def __init__(self, api_key=None):
-        """Initialize Gemini analyzer with the new google-genai SDK."""
-        self.api_key = api_key or os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
+        """Initialize Gemini analyzer with API key rotation support."""
+        # Collect all available API keys
+        self._api_keys = []
+        self._current_key_index = 0
+        
+        # Single key passed directly
+        if api_key:
+            self._api_keys.append(api_key)
+        
+        # Comma-separated keys in GEMINI_API_KEYS
+        keys_str = os.getenv('GEMINI_API_KEYS', '')
+        if keys_str:
+            self._api_keys.extend([k.strip() for k in keys_str.split(',') if k.strip()])
+        
+        # Individual keys: GEMINI_API_KEY, GEMINI_API_KEY_2, GEMINI_API_KEY_3, etc.
+        primary_key = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
+        if primary_key and primary_key not in self._api_keys:
+            self._api_keys.insert(0, primary_key)
+        
+        for i in range(2, 10):  # Support up to 9 keys
+            key = os.getenv(f'GEMINI_API_KEY_{i}')
+            if key and key not in self._api_keys:
+                self._api_keys.append(key)
+        
         self._client = None
         self._initialized = False
+        self._genai = None
+        self.api_key = None
         # Preferred model order
         self._model_names = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite']
 
-        if self.api_key:
-            try:
-                from google import genai
-                self._client = genai.Client(api_key=self.api_key)
-                self._genai = genai
-                self._initialized = True
-                logger.info("Gemini AI analyzer initialized (new google-genai SDK, model: %s)", self._model_names[0])
-            except Exception as e:
-                logger.warning("Failed to initialize Gemini: %s", e)
-                self._initialized = False
+        if self._api_keys:
+            self._init_client(self._api_keys[0])
+            logger.info("Gemini AI analyzer initialized with %d API key(s)", len(self._api_keys))
         else:
             logger.info("No Gemini API key found. Set GEMINI_API_KEY for AI analysis.")
+
+    def _init_client(self, api_key):
+        """Initialize client with specific API key."""
+        try:
+            from google import genai
+            self._client = genai.Client(api_key=api_key)
+            self._genai = genai
+            self._initialized = True
+            self.api_key = api_key
+            return True
+        except Exception as e:
+            logger.warning("Failed to initialize Gemini with key: %s", e)
+            self._initialized = False
+            return False
+
+    def _rotate_key(self):
+        """Rotate to next API key when rate limited. Returns True if rotated successfully."""
+        if len(self._api_keys) <= 1:
+            logger.warning("No additional API keys to rotate to")
+            return False
+        
+        self._current_key_index = (self._current_key_index + 1) % len(self._api_keys)
+        new_key = self._api_keys[self._current_key_index]
+        logger.info("Rotating to API key %d of %d", self._current_key_index + 1, len(self._api_keys))
+        return self._init_client(new_key)
 
     @property
     def is_available(self):
         return self._initialized and self._client is not None
 
-    def analyze_image(self, image_file):
+    def analyze_image(self, image_file, lang: str = 'en'):
         """
         Analyze a plant image using Gemini Vision API + Google Search grounding.
 
@@ -166,9 +251,16 @@ class GeminiAnalyzer:
         1. Send image to Gemini -> identify plant and disease
         2. Use Google Search grounding -> search internet for disease cure and treatment
 
+        Args:
+            image_file: Image file to analyze
+            lang: Language code for response (en, hi, mr). Default is 'en' (English)
+
         Returns:
             Tuple of (analysis_result dict or None, message string)
         """
+        # Validate language code
+        if lang not in ['en', 'hi', 'mr']:
+            lang = 'en'
         if not self.is_available:
             return None, "Gemini AI not configured. Set GEMINI_API_KEY env variable."
 
@@ -201,15 +293,18 @@ class GeminiAnalyzer:
             
             image_part = Part.from_bytes(data=image_bytes, mime_type=mime_type)
             
+            # Get localized prompt
+            analysis_prompt = get_image_analysis_prompt(lang)
+            
             step1_result = None
             last_error = None
             
             for model_name in self._model_names:
                 try:
-                    logger.info("Trying model: %s", model_name)
+                    logger.info("Trying model: %s with language: %s", model_name, lang)
                     response = self._client.models.generate_content(
                         model=model_name,
-                        contents=[IMAGE_ANALYSIS_PROMPT, image_part],
+                        contents=[analysis_prompt, image_part],
                         config=GenerateContentConfig(
                             temperature=0.2,
                             max_output_tokens=2048,
@@ -235,14 +330,23 @@ class GeminiAnalyzer:
                     error_str = str(e)
                     last_error = error_str
                     if '429' in error_str or 'RESOURCE_EXHAUSTED' in error_str:
-                        logger.warning("Rate limited on %s, trying next...", model_name)
-                        import time
-                        time.sleep(2)
-                        continue
+                        logger.warning("Rate limited on %s, trying key rotation...", model_name)
+                        if self._rotate_key():
+                            logger.info("Rotated to new API key, retrying...")
+                            import time
+                            time.sleep(1)
+                            continue
+                        else:
+                            import time
+                            time.sleep(2)
+                            continue
                     logger.warning("Error with %s: %s", model_name, error_str)
                     continue
 
             if not step1_result:
+                # If we failed due to rate limits on all keys, give clear message
+                if '429' in str(last_error) or 'RESOURCE_EXHAUSTED' in str(last_error):
+                    return None, "Rate limit reached on all API keys. Please wait 1-2 minutes."
                 return None, "Image analysis failed. Last error: {}".format(last_error)
 
             # ═══════════════════════════════════════════════════════
@@ -255,9 +359,9 @@ class GeminiAnalyzer:
             is_healthy = step1_result.get('is_healthy', False) or disease_name.lower() in ('healthy', 'none', '')
 
             if not is_healthy and disease_name.lower() not in ('healthy', 'unknown', 'none', ''):
-                logger.info("Step 2: Searching internet for '%s' on '%s'...", disease_name, plant_name)
+                logger.info("Step 2: Searching internet for '%s' on '%s' (lang=%s)...", disease_name, plant_name, lang)
                 
-                search_prompt = get_disease_search_prompt(plant_name, disease_name, symptoms)
+                search_prompt = get_disease_search_prompt(plant_name, disease_name, symptoms, lang)
                 
                 step2_result = None
                 for model_name in self._model_names:
@@ -518,8 +622,8 @@ _gemini_instance = None
 
 
 def get_gemini_analyzer():
-    """Get or create Gemini analyzer singleton. Retries if not initialized."""
+    """Get or create Gemini analyzer singleton."""
     global _gemini_instance
-    if _gemini_instance is None or not _gemini_instance.is_available:
+    if _gemini_instance is None:
         _gemini_instance = GeminiAnalyzer()
     return _gemini_instance

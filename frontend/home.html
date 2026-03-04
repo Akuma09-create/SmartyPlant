@@ -498,16 +498,68 @@
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);">
         <div class="container-fluid">
-            <span class="navbar-brand">
-                <i class="fas fa-leaf"></i> Plant Health
-            </span>
-            <div class="nav-user-info">
-                <span id="userDisplay">Welcome!</span>
-                <button class="logout-btn" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </button>
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-leaf" style="color: #1abc9c;"></i> <span data-i18n="app_name">Plant Health</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#homeNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="homeNavbar">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/" data-i18n="nav_analyze">Analyze Plant</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/plants" data-i18n="nav_my_plants">My Plants</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/history" data-i18n="nav_history">History</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Language Selector -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown">
+                            <i class="fas fa-globe me-1"></i> <span id="currentLang">English</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('en')">🇬🇧 English</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('hi')">🇮🇳 हिंदी</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('mr')">🇮🇳 मराठी</a></li>
+                        </ul>
+                    </div>
+                    <!-- Notifications -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown">
+                            <i class="fas fa-bell"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display: none;">0</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end p-3" style="width: 300px; max-height: 400px; overflow-y: auto;">
+                            <h6 class="dropdown-header" data-i18n="notifications">Notifications</h6>
+                            <div id="notificationList">
+                                <p class="text-muted text-center small" data-i18n="no_notifications">No notifications</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- User Menu -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> <span id="userDisplay">User</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2"></i><span data-i18n="nav_dashboard">Dashboard</span></a></li>
+                            <li><a class="dropdown-item" href="/plants"><i class="fas fa-seedling me-2"></i><span data-i18n="nav_my_plants">My Plants</span></a></li>
+                            <li><a class="dropdown-item" href="/history"><i class="fas fa-history me-2"></i><span data-i18n="nav_history">History</span></a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i><span data-i18n="logout">Logout</span></a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -607,104 +659,126 @@
         <p class="copyright">&copy; 2026 Cybercops Technologies. All Rights Reserved. | Version 1.0.0</p>
     </div>
 
+    <!-- Chatbot FAB -->
+    <button class="chat-fab" id="chatFab" onclick="toggleChat()" style="position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4); font-size: 1.5rem; cursor: pointer; z-index: 1000;">
+        <i class="fas fa-comments"></i>
+    </button>
+
+    <!-- Chat Panel -->
+    <div class="chat-panel" id="chatPanel" style="position: fixed; bottom: 100px; right: 30px; width: 380px; height: 500px; background: white; border-radius: 15px; box-shadow: 0 5px 30px rgba(0,0,0,0.2); display: none; flex-direction: column; z-index: 999;">
+        <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 15px; border-radius: 15px 15px 0 0;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-robot me-2"></i><span data-i18n="chat_title">Yuki - Plant Assistant</span></h6>
+                <button class="btn btn-sm btn-light" onclick="toggleChat()"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 15px;">
+            <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 15px 15px 15px 0; max-width: 80%; margin-bottom: 15px;">
+                <span data-i18n="chat_welcome">Hello! I'm Yuki, your plant care assistant. Ask me anything about plant health!</span>
+            </div>
+        </div>
+        <div style="padding: 15px; border-top: 1px solid #eee;">
+            <div class="input-group">
+                <input type="text" class="form-control" id="chatInput" placeholder="Ask about plant care..." onkeypress="if(event.key==='Enter')sendChatMessage()">
+                <button class="btn btn-success" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/translations.js"></script>
     <script>
-        /**
-         * Session Management
-         */
+        // Initialize on load
         window.addEventListener('load', () => {
             initializeSession();
+            const lang = localStorage.getItem('language') || 'en';
+            changeLanguage(lang);
+            loadNotifications();
         });
 
         function initializeSession() {
-            const sessionId = sessionStorage.getItem('sessionId');
-            const user = sessionStorage.getItem('user');
-
-            if (!sessionId || !user) {
-                window.location.href = 'login.html';
+            const token = localStorage.getItem('authToken');
+            const userName = localStorage.getItem('userName');
+            if (!token) {
+                window.location.href = '/login';
                 return;
             }
-
-            try {
-                const userData = JSON.parse(user);
-                updateUserDisplay(userData);
-            } catch (error) {
-                console.error('Failed to parse user data:', error);
-                clearSession();
-                window.location.href = 'login.html';
-            }
-        }
-
-        function updateUserDisplay(user) {
-            const userDisplay = document.getElementById('userDisplay');
-            if (userDisplay) {
-                if (user.is_guest) {
-                    userDisplay.textContent = `Welcome, ${user.username}`;
-                } else {
-                    userDisplay.textContent = `Welcome, ${user.email}`;
-                }
-            }
+            document.getElementById('userDisplay').textContent = userName || 'User';
         }
 
         function logout() {
-            const sessionId = sessionStorage.getItem('sessionId');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userName');
+            window.location.href = '/login';
+        }
 
-            if (sessionId) {
-                fetch('http://localhost:5000/api/v1/auth/logout', {
+        // Language functions - using translations.js system
+        function changeLanguage(lang) {
+            if (typeof setLanguage === 'function') {
+                setLanguage(lang);
+            }
+            const langNames = { en: 'English', hi: 'हिंदी', mr: 'मराठी' };
+            document.getElementById('currentLang').textContent = langNames[lang] || 'English';
+        }
+
+        // Chat functions
+        function toggleChat() {
+            const panel = document.getElementById('chatPanel');
+            panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.innerHTML += `<div style="margin-left: auto; background: #e8f5e9; padding: 10px 15px; border-radius: 15px 15px 0 15px; max-width: 80%; margin-bottom: 15px;">${message}</div>`;
+            input.value = '';
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            try {
+                const token = localStorage.getItem('authToken');
+                const lang = localStorage.getItem('language') || 'en';
+                const response = await fetch('/api/v1/chat', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ session_id: sessionId })
-                }).catch(error => console.error('Logout error:', error));
+                    headers: { 'Content-Type': 'application/json', 'Authorization': token ? `Bearer ${token}` : '' },
+                    body: JSON.stringify({ message, language: lang })
+                });
+                const data = await response.json();
+                messagesDiv.innerHTML += `<div style="background: #f8f9fa; padding: 10px 15px; border-radius: 15px 15px 15px 0; max-width: 80%; margin-bottom: 15px;">${data.response || data.message || 'Sorry, I could not process that.'}</div>`;
+            } catch (e) {
+                messagesDiv.innerHTML += `<div style="background: #f8f9fa; padding: 10px 15px; border-radius: 15px; color: red;">Error connecting.</div>`;
             }
-
-            clearSession();
-            window.location.href = 'login.html';
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        function clearSession() {
-            sessionStorage.removeItem('sessionId');
-            sessionStorage.removeItem('user');
+        // Notifications
+        async function loadNotifications() {
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) return;
+                const response = await fetch('/api/v1/notifications', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await response.json();
+                const notifications = data.notifications || [];
+                const unread = notifications.filter(n => !n.read).length;
+                const badge = document.getElementById('notificationBadge');
+                const list = document.getElementById('notificationList');
+                if (unread > 0) { badge.textContent = unread; badge.style.display = 'inline'; } else { badge.style.display = 'none'; }
+                if (notifications.length > 0) {
+                    list.innerHTML = notifications.slice(0, 5).map(n => `<div class="p-2 mb-2 rounded ${n.read ? 'bg-light' : 'bg-success bg-opacity-10'}" style="font-size: 0.85rem;"><strong>${n.title}</strong><br><small class="text-muted">${n.message}</small></div>`).join('');
+                }
+            } catch (e) { console.log('Could not load notifications'); }
         }
 
-        /**
-         * File Upload Handling
-         */
-        function triggerFileInput() {
-            document.getElementById('fileInput').click();
-        }
+        // File handlers
+        function triggerFileInput() { document.getElementById('fileInput').click(); }
+        function triggerCamera() { document.getElementById('cameraInput').click(); }
+        document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files && e.target.files[0]) displayImagePreview(e.target.files[0]); });
+        document.getElementById('cameraInput').addEventListener('change', e => { if (e.target.files && e.target.files[0]) displayImagePreview(e.target.files[0]); });
 
-        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
-
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (file) {
-                displayImagePreview(file);
-            }
-        }
-
-        /**
-         * Camera Capture Handling
-         */
-        function triggerCamera() {
-            const cameraInput = document.getElementById('cameraInput');
-            cameraInput.click();
-        }
-
-        document.getElementById('cameraInput').addEventListener('change', handleFileSelect);
-
-        /**
-         * Image Preview Modal
-         */
         function displayImagePreview(file) {
             const reader = new FileReader();
-            reader.onload = function (e) {
-                document.getElementById('previewImage').src = e.target.result;
-                document.getElementById('imageModal').classList.add('show');
-            };
+            reader.onload = e => { document.getElementById('previewImage').src = e.target.result; document.getElementById('imageModal').classList.add('show'); };
             reader.readAsDataURL(file);
-
-            // Store file for later analysis
             window.selectedImageFile = file;
         }
 
@@ -715,51 +789,27 @@
             window.selectedImageFile = null;
         }
 
-        /**
-         * Analyze Plant
-         */
         function confirmAnalyze() {
-            if (!window.selectedImageFile) {
-                console.error('No image selected');
-                return;
-            }
-
-            // Placeholder for analysis
-            // In a real app, this would call the backend API
-            console.log('Analyzing image:', window.selectedImageFile.name);
-
-            // Emit custom event for parent page to handle
-            const event = new CustomEvent('analyzeImage', {
-                detail: { file: window.selectedImageFile }
-            });
-            document.dispatchEvent(event);
-
-            closeImageModal();
-            // Note: Parent page can listen to this event and handle analysis
+            if (!window.selectedImageFile) return;
+            sessionStorage.setItem('pendingFile', 'true');
+            window.location.href = '/';
         }
 
-        /**
-         * Scroll to Upload Section
-         */
-        function scrollToUpload() {
-            document.getElementById('uploadCard').scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-        }
+        function scrollToUpload() { document.getElementById('uploadCard').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
 
-        /**
-         * Keyboard Support
-         */
-        document.addEventListener('keydown', (e) => {
-            // Press Escape to close modal
-            if (e.key === 'Escape') {
-                closeImageModal();
-            }
-            // Press Enter to confirm analysis
-            if (e.key === 'Enter' && document.getElementById('imageModal').classList.contains('show')) {
-                confirmAnalyze();
-            }
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeImageModal();
+            if (e.key === 'Enter' && document.getElementById('imageModal').classList.contains('show')) confirmAnalyze();
+        });
+
+        // Initialize translations and language on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const lang = localStorage.getItem('language') || 'en';
+            const langNames = { en: 'English', hi: 'हिंदी', mr: 'मराठी' };
+            const currentLangEl = document.getElementById('currentLang');
+            if (currentLangEl) currentLangEl.textContent = langNames[lang] || 'English';
+            if (typeof translatePage === 'function') translatePage();
+            loadNotifications();
         });
     </script>
 </body>

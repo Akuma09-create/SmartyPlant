@@ -7,6 +7,9 @@ import os
 import sys
 from pathlib import Path
 
+# Change to script directory so it works from anywhere
+os.chdir(Path(__file__).parent)
+
 # Load environment variables from .env file
 from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent / '.env')

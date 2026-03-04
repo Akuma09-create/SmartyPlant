@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Plants - Smart Plant Health Assistant</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .plant-card {
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            animation: fadeInScale 0.4s ease-out;
+        }
+        .plant-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.3); }
+            50% { transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .plant-image {
+            height: 180px;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: #4caf50;
+        }
+        .plant-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .reminder-tag {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+        .add-plant-card {
+            border: 2px dashed #28a745;
+            background: transparent;
+            min-height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { border-color: #28a745; }
+            50% { border-color: #20c997; box-shadow: 0 0 20px rgba(40, 167, 69, 0.2); }
+        }
+        .add-plant-card:hover {
+            background: rgba(40, 167, 69, 0.08);
+            transform: scale(1.02);
+            animation: none;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.2);
+        }
+        .nav-pills .nav-link.active {
+            background-color: #28a745;
+        }
+        .nav-pills .nav-link {
+            color: #28a745;
+        }
+        .reminder-list-item {
+            border-left: 3px solid #28a745;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+        }
+        .reminder-list-item.water { border-left-color: #17a2b8; }
+        .reminder-list-item.fertilize { border-left-color: #ffc107; }
+        .reminder-list-item.prune { border-left-color: #28a745; }
+        .reminder-list-item.repot { border-left-color: #6c757d; }
+        .quick-action-btn {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+        }
+        .quick-action-btn:hover {
+            transform: scale(1.1);
+        }
+        .quick-actions {
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation (same as dashboard) -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">
+                <i class="fas fa-leaf me-2"></i>
+                <span data-i18n="app_name">Smart Plant Health Assistant</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/dashboard" data-i18n="nav_dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/" data-i18n="nav_analyze">Analyze Plant</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/plants" data-i18n="nav_my_plants">My Plants</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/history" data-i18n="nav_history">History</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <div class="dropdown me-3">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="languageDropdown" data-bs-toggle="dropdown">
+                            <i class="fas fa-globe me-1"></i> <span id="currentLang">English</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('en')">English</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('hi')">हिंदी</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="changeLanguage('mr')">मराठी</a></li>
+                        </ul>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> <span id="userName">User</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 data-i18n="my_plants">My Plants</h2>
+                <p class="text-muted" data-i18n="manage_plants_desc">Manage your plants and set care reminders</p>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-pills mb-4" id="plantTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="plants-tab" data-bs-toggle="pill" data-bs-target="#plants" type="button" data-i18n="plants">Plants</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reminders-tab" data-bs-toggle="pill" data-bs-target="#reminders" type="button" data-i18n="reminders">Reminders</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="plantTabsContent">
+            <!-- Plants Tab -->
+            <div class="tab-pane fade show active" id="plants" role="tabpanel">
+                <div class="row" id="plantsGrid">
+                    <!-- Add Plant Card -->
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                        <div class="card add-plant-card" data-bs-toggle="modal" data-bs-target="#addPlantModal">
+                            <div class="text-center text-success">
+                                <i class="fas fa-plus fa-3x mb-3"></i>
+                                <h5 data-i18n="add_new_plant">Add New Plant</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Plants loaded dynamically -->
+                </div>
+            </div>
+
+            <!-- Reminders Tab -->
+            <div class="tab-pane fade" id="reminders" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0" data-i18n="all_reminders">All Reminders</h5>
+                                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addReminderModal">
+                                    <i class="fas fa-plus me-1"></i> <span data-i18n="add_reminder">Add Reminder</span>
+                                </button>
+                            </div>
+                            <div class="card-body" id="remindersList">
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-bell-slash fa-3x mb-3 opacity-50"></i>
+                                    <p data-i18n="no_reminders_set">No reminders set</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0" data-i18n="upcoming_this_week">Upcoming This Week</h5>
+                            </div>
+                            <div class="card-body" id="upcomingRemindersTab">
+                                <div class="text-center text-muted py-3">
+                                    <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                                    <p class="small" data-i18n="all_caught_up">All caught up!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Plant Modal -->
+    <div class="modal fade" id="addPlantModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" data-i18n="add_new_plant">Add New Plant</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPlantForm">
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="plant_name">Plant Name</label>
+                            <input type="text" class="form-control" id="plantName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="species">Species (Optional)</label>
+                            <input type="text" class="form-control" id="plantSpecies">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="location">Location</label>
+                            <select class="form-select" id="plantLocation">
+                                <option value="indoor" data-i18n="indoor">Indoor</option>
+                                <option value="outdoor" data-i18n="outdoor">Outdoor</option>
+                                <option value="balcony" data-i18n="balcony">Balcony</option>
+                                <option value="garden" data-i18n="garden">Garden</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="plant_image">Plant Image</label>
+                            <input type="file" class="form-control" id="plantImage" accept="image/*">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="notes">Notes</label>
+                            <textarea class="form-control" id="plantNotes" rows="2"></textarea>
+                        </div>
+                        <hr>
+                        <h6 data-i18n="set_reminders">Set Reminders</h6>
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="waterReminder">
+                                    <label class="form-check-label" for="waterReminder">
+                                        💧 <span data-i18n="watering">Watering</span>
+                                    </label>
+                                </div>
+                                <input type="number" class="form-control form-control-sm mt-1" id="waterDays" placeholder="Days" min="1" value="3" style="display: none">
+                            </div>
+                            <div class="col-6 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="fertilizeReminder">
+                                    <label class="form-check-label" for="fertilizeReminder">
+                                        🌱 <span data-i18n="fertilizing">Fertilizing</span>
+                                    </label>
+                                </div>
+                                <input type="number" class="form-control form-control-sm mt-1" id="fertilizeDays" placeholder="Days" min="1" value="14" style="display: none">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="addPlant()" data-i18n="add_plant">Add Plant</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Plant Modal -->
+    <div class="modal fade" id="editPlantModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" data-i18n="edit_plant">Edit Plant</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editPlantForm">
+                        <input type="hidden" id="editPlantId">
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="plant_name">Plant Name</label>
+                            <input type="text" class="form-control" id="editPlantName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="species">Species</label>
+                            <input type="text" class="form-control" id="editPlantSpecies">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="location">Location</label>
+                            <select class="form-select" id="editPlantLocation">
+                                <option value="indoor">Indoor</option>
+                                <option value="outdoor">Outdoor</option>
+                                <option value="balcony">Balcony</option>
+                                <option value="garden">Garden</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="notes">Notes</label>
+                            <textarea class="form-control" id="editPlantNotes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger me-auto" onclick="deletePlant()">
+                        <i class="fas fa-trash"></i> <span data-i18n="delete">Delete</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="updatePlant()" data-i18n="save_changes">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Reminder Modal -->
+    <div class="modal fade" id="addReminderModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" data-i18n="add_reminder">Add Reminder</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addReminderForm">
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="reminder_type">Reminder Type</label>
+                            <select class="form-select" id="reminderType" required>
+                                <option value="water">💧 Watering</option>
+                                <option value="fertilize">🌱 Fertilizing</option>
+                                <option value="prune">✂️ Pruning</option>
+                                <option value="repot">🪴 Repotting</option>
+                                <option value="custom">📝 Custom</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="customTitleGroup" style="display: none;">
+                            <label class="form-label" data-i18n="custom_title">Custom Title</label>
+                            <input type="text" class="form-control" id="reminderTitle">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="select_plant">Select Plant (Optional)</label>
+                            <select class="form-select" id="reminderPlantId">
+                                <option value="">All Plants / General</option>
+                                <!-- Plants loaded dynamically -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="frequency_days">Frequency (Days)</label>
+                            <input type="number" class="form-control" id="reminderFrequency" min="1" value="7" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-i18n="cancel">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="addReminder()" data-i18n="add_reminder">Add Reminder</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="js/translations.js"></script>
+    <script>
+        const API_BASE = '/api/v1';
+        let currentLanguage = localStorage.getItem('language') || 'en';
+        let authToken = localStorage.getItem('authToken');
+        let plants = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!authToken) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            initializePage();
+            
+            // Check for action=add in URL
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('action') === 'add') {
+                new bootstrap.Modal(document.getElementById('addPlantModal')).show();
+            }
+            if (params.get('tab') === 'reminders') {
+                document.getElementById('reminders-tab').click();
+            }
+        });
+
+        async function initializePage() {
+            changeLanguage(currentLanguage, false);
+            await loadUserData();
+            await loadPlants();
+            await loadReminders();
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            // Toggle water days input
+            document.getElementById('waterReminder').addEventListener('change', function() {
+                document.getElementById('waterDays').style.display = this.checked ? 'block' : 'none';
+            });
+            document.getElementById('fertilizeReminder').addEventListener('change', function() {
+                document.getElementById('fertilizeDays').style.display = this.checked ? 'block' : 'none';
+            });
+            // Toggle custom title
+            document.getElementById('reminderType').addEventListener('change', function() {
+                document.getElementById('customTitleGroup').style.display = this.value === 'custom' ? 'block' : 'none';
+            });
+        }
+
+        async function loadUserData() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('userName').textContent = data.user.name || 'User';
+                }
+            } catch (error) {
+                console.error('Error loading user:', error);
+            }
+        }
+
+        async function loadPlants() {
+            try {
+                const response = await fetch(`${API_BASE}/plants`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    plants = data.plants || [];
+                    renderPlants();
+                    updatePlantSelector();
+                }
+            } catch (error) {
+                console.error('Error loading plants:', error);
+            }
+        }
+
+        function renderPlants() {
+            const grid = document.getElementById('plantsGrid');
+            
+            // Keep add button, remove other cards
+            const addCard = grid.querySelector('.add-plant-card').parentElement;
+            grid.innerHTML = '';
+            grid.appendChild(addCard);
+            
+            plants.forEach(plant => {
+                const card = document.createElement('div');
+                card.className = 'col-lg-3 col-md-4 col-sm-6 mb-4';
+                
+                // Group reminders by type for better display
+                const remindersByType = {};
+                if (plant.reminders) {
+                    plant.reminders.forEach(r => {
+                        remindersByType[r.type] = r;
+                    });
+                }
+                
+                // Generate quick action buttons
+                const quickActions = ['water', 'fertilize', 'prune', 'repot'].map(type => {
+                    const reminder = remindersByType[type];
+                    if (reminder) {
+                        const daysUntil = getDaysUntilDue(reminder.next_reminder);
+                        const isOverdue = daysUntil < 0;
+                        const isDueToday = daysUntil === 0;
+                        const statusClass = isOverdue ? 'btn-danger' : (isDueToday ? 'btn-warning' : 'btn-outline-secondary');
+                        return `<button class="btn ${statusClass} btn-sm quick-action-btn" onclick="markReminderDone(${reminder.id}, '${type}')" title="${getReminderName(type)}${isOverdue ? ' (Overdue!)' : (isDueToday ? ' (Due today!)' : '')}">
+                            ${getReminderIcon(type)}
+                        </button>`;
+                    }
+                    return '';
+                }).filter(Boolean).join('');
+                
+                card.innerHTML = `
+                    <div class="card plant-card h-100 border-0">
+                        <div class="plant-image">
+                            ${plant.image_url 
+                                ? `<img src="${plant.image_url}" alt="${plant.name}">`
+                                : '<i class="fas fa-seedling"></i>'
+                            }
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title">${plant.name}</h5>
+                            <p class="text-muted small mb-2">${plant.species || ''}</p>
+                            <p class="small mb-2">
+                                <i class="fas fa-map-marker-alt text-muted me-1"></i>
+                                ${plant.location || 'Not specified'}
+                            </p>
+                            <div class="mb-2">
+                                ${plant.reminders?.map(r => `
+                                    <span class="badge bg-${getReminderColor(r.type)} reminder-tag me-1" title="Next: ${formatReminderDate(r.next_reminder)}">
+                                        ${getReminderIcon(r.type)} ${r.frequency_days}d
+                                    </span>
+                                `).join('') || '<span class="text-muted small">No reminders set</span>'}
+                            </div>
+                            ${quickActions ? `
+                            <div class="quick-actions d-flex gap-1 mb-2">
+                                ${quickActions}
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="card-footer bg-white border-0">
+                            <button class="btn btn-outline-success btn-sm w-100" onclick="openEditPlant(${plant.id})">
+                                <i class="fas fa-edit me-1"></i> <span data-i18n="edit">Edit</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        
+        function getDaysUntilDue(dateStr) {
+            if (!dateStr) return 999;
+            const due = new Date(dateStr);
+            const now = new Date();
+            const diffTime = due.getTime() - now.getTime();
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+        
+        function formatReminderDate(dateStr) {
+            if (!dateStr) return 'Not set';
+            return new Date(dateStr).toLocaleDateString();
+        }
+        
+        async function markReminderDone(reminderId, type) {
+            try {
+                const response = await fetch(`${API_BASE}/notifications/reminder/${reminderId}/complete`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    showToast(`${getReminderName(type)} marked as done!`, 'success');
+                    await loadPlants();
+                } else {
+                    showToast('Failed to update reminder', 'error');
+                }
+            } catch (error) {
+                console.error('Error marking reminder done:', error);
+                showToast('Error updating reminder', 'error');
+            }
+        }
+        
+        function showToast(message, type = 'info') {
+            const toastEl = document.createElement('div');
+            toastEl.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : (type === 'error' ? 'danger' : 'info')} border-0 position-fixed`;
+            toastEl.style.cssText = 'bottom: 20px; right: 20px; z-index: 9999;';
+            toastEl.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            document.body.appendChild(toastEl);
+            const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+            toast.show();
+            toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
+        }
+
+        function updatePlantSelector() {
+            const selector = document.getElementById('reminderPlantId');
+            selector.innerHTML = '<option value="">All Plants / General</option>';
+            plants.forEach(p => {
+                selector.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+            });
+        }
+
+        async function addPlant() {
+            const name = document.getElementById('plantName').value.trim();
+            if (!name) {
+                alert(t('plant_name_required', currentLanguage));
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('species', document.getElementById('plantSpecies').value);
+            formData.append('location', document.getElementById('plantLocation').value);
+            formData.append('notes', document.getElementById('plantNotes').value);
+            
+            const imageFile = document.getElementById('plantImage').files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/plants`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Backend auto-creates care schedule based on species
+                    const remindersCreated = data.reminders_created || 0;
+                    
+                    bootstrap.Modal.getInstance(document.getElementById('addPlantModal')).hide();
+                    document.getElementById('addPlantForm').reset();
+                    await loadPlants();
+                    
+                    if (remindersCreated > 0) {
+                        showToast(`Plant added with ${remindersCreated} care reminders!`, 'success');
+                    } else {
+                        showToast('Plant added successfully!', 'success');
+                    }
+                } else {
+                    const err = await response.json();
+                    alert(err.error || 'Failed to add plant');
+                }
+            } catch (error) {
+                console.error('Error adding plant:', error);
+                alert('Error adding plant');
+            }
+        }
+
+        function openEditPlant(plantId) {
+            const plant = plants.find(p => p.id === plantId);
+            if (!plant) return;
+
+            document.getElementById('editPlantId').value = plant.id;
+            document.getElementById('editPlantName').value = plant.name;
+            document.getElementById('editPlantSpecies').value = plant.species || '';
+            document.getElementById('editPlantLocation').value = plant.location || 'indoor';
+            document.getElementById('editPlantNotes').value = plant.notes || '';
+
+            new bootstrap.Modal(document.getElementById('editPlantModal')).show();
+        }
+
+        async function updatePlant() {
+            const plantId = document.getElementById('editPlantId').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/plants/${plantId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        name: document.getElementById('editPlantName').value,
+                        species: document.getElementById('editPlantSpecies').value,
+                        location: document.getElementById('editPlantLocation').value,
+                        notes: document.getElementById('editPlantNotes').value
+                    })
+                });
+
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('editPlantModal')).hide();
+                    await loadPlants();
+                } else {
+                    alert('Failed to update plant');
+                }
+            } catch (error) {
+                console.error('Error updating plant:', error);
+            }
+        }
+
+        async function deletePlant() {
+            if (!confirm(t('confirm_delete_plant', currentLanguage))) return;
+            
+            const plantId = document.getElementById('editPlantId').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/plants/${plantId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('editPlantModal')).hide();
+                    await loadPlants();
+                }
+            } catch (error) {
+                console.error('Error deleting plant:', error);
+            }
+        }
+
+        async function loadReminders() {
+            try {
+                const [remindersRes, upcomingRes] = await Promise.all([
+                    fetch(`${API_BASE}/reminders`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    }),
+                    fetch(`${API_BASE}/reminders/upcoming?days=7`, {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    })
+                ]);
+
+                if (remindersRes.ok) {
+                    const data = await remindersRes.json();
+                    renderReminders(data.reminders || []);
+                }
+
+                if (upcomingRes.ok) {
+                    const data = await upcomingRes.json();
+                    renderUpcomingReminders(data.reminders || []);
+                }
+            } catch (error) {
+                console.error('Error loading reminders:', error);
+            }
+        }
+
+        function renderReminders(reminders) {
+            const container = document.getElementById('remindersList');
+            
+            if (reminders.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-bell-slash fa-3x mb-3 opacity-50"></i>
+                        <p data-i18n="no_reminders_set">${t('no_reminders_set', currentLanguage)}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = reminders.map(r => `
+                <div class="reminder-list-item ${r.type}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1">
+                                ${getReminderIcon(r.type)} ${r.title || getReminderName(r.type)}
+                            </h6>
+                            <small class="text-muted">
+                                ${r.plant_name ? `<i class="fas fa-seedling me-1"></i>${r.plant_name} · ` : ''}
+                                Every ${r.frequency_days} days
+                            </small>
+                            <br>
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>Next: ${formatDate(r.next_due)}
+                            </small>
+                        </div>
+                        <div>
+                            <button class="btn btn-success btn-sm me-1" onclick="completeReminder(${r.id})" title="Mark as done">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteReminder(${r.id})" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderUpcomingReminders(reminders) {
+            const container = document.getElementById('upcomingRemindersTab');
+            
+            if (reminders.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                        <p class="small" data-i18n="all_caught_up">${t('all_caught_up', currentLanguage)}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = reminders.map(r => `
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <div>
+                        <small class="fw-bold">${getReminderIcon(r.type)} ${r.title || getReminderName(r.type)}</small>
+                        ${r.plant_name ? `<br><small class="text-muted">${r.plant_name}</small>` : ''}
+                    </div>
+                    <small class="text-muted">${formatDate(r.next_due)}</small>
+                </div>
+            `).join('');
+        }
+
+        async function createReminder(type, plantId, days) {
+            try {
+                await fetch(`${API_BASE}/reminders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        type: type,
+                        plant_id: plantId,
+                        frequency_days: days
+                    })
+                });
+            } catch (error) {
+                console.error('Error creating reminder:', error);
+            }
+        }
+
+        async function addReminder() {
+            const type = document.getElementById('reminderType').value;
+            const frequency = parseInt(document.getElementById('reminderFrequency').value);
+            const plantId = document.getElementById('reminderPlantId').value || null;
+            const title = type === 'custom' ? document.getElementById('reminderTitle').value : null;
+
+            try {
+                const response = await fetch(`${API_BASE}/reminders`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        type: type,
+                        frequency_days: frequency,
+                        plant_id: plantId ? parseInt(plantId) : null,
+                        title: title
+                    })
+                });
+
+                if (response.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('addReminderModal')).hide();
+                    document.getElementById('addReminderForm').reset();
+                    await loadReminders();
+                }
+            } catch (error) {
+                console.error('Error adding reminder:', error);
+            }
+        }
+
+        async function completeReminder(reminderId) {
+            try {
+                await fetch(`${API_BASE}/reminders/${reminderId}/complete`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                await loadReminders();
+            } catch (error) {
+                console.error('Error completing reminder:', error);
+            }
+        }
+
+        async function deleteReminder(reminderId) {
+            if (!confirm(t('confirm_delete_reminder', currentLanguage))) return;
+            
+            try {
+                await fetch(`${API_BASE}/reminders/${reminderId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                await loadReminders();
+            } catch (error) {
+                console.error('Error deleting reminder:', error);
+            }
+        }
+
+        function changeLanguage(lang, save = true) {
+            currentLanguage = lang;
+            localStorage.setItem('language', lang);
+            
+            const langNames = { en: 'English', hi: 'हिंदी', mr: 'मराठी' };
+            document.getElementById('currentLang').textContent = langNames[lang];
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key, lang);
+            });
+            
+            if (save) {
+                fetch(`${API_BASE}/auth/language`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ language: lang })
+                });
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            window.location.href = '/login';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            if (date.toDateString() === today.toDateString()) return t('today', currentLanguage);
+            if (date.toDateString() === tomorrow.toDateString()) return t('tomorrow', currentLanguage);
+            return date.toLocaleDateString();
+        }
+
+        function getReminderColor(type) {
+            const colors = { water: 'info', fertilize: 'warning', prune: 'success', repot: 'secondary' };
+            return colors[type] || 'primary';
+        }
+
+        function getReminderIcon(type) {
+            const icons = { water: '💧', fertilize: '🌱', prune: '✂️', repot: '🪴', custom: '📝' };
+            return icons[type] || '🔔';
+        }
+
+        function getReminderName(type) {
+            const names = { water: 'Watering', fertilize: 'Fertilizing', prune: 'Pruning', repot: 'Repotting' };
+            return names[type] || type;
+        }
+    </script>
+</body>
+</html>
